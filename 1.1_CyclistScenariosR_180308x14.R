@@ -36,12 +36,9 @@ nextracyclist <- round((targetpcycle * length(unique(sp$census_id))) - length(un
 # Randomly turn N=sp$nextracyclist non-cyclists to new cyclists, with weight equal to sp$pcyclist_scen
 sp$scen_newcyclist <- 0
 set.seed(2018)
-
 unique_non_cyclists_df <- sp %>% distinct(census_id, .keep_all = TRUE) %>% filter(cyclist != 1)
 sampled_non_cyclists_df <- sample_n(unique_non_cyclists_df, size = nextracyclist, weight = unique_non_cyclists_df$pcyclist_scen)
-
-## Q: how??!
-sp$scen_newcyclist[sp$census_id %in% sampled_non_cyclists_df$census_id] <- 1 # temp hack where everyone is new cyclist!
+sp$scen_newcyclist[sp$census_id %in% sampled_non_cyclists_df$census_id] <- 1 
 
 ## STEP 2: SWITCH TRIPS AMONG NEW CYCLISTS & UPDATE SCENARIO VALUES
 
