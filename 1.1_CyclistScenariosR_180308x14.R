@@ -1,7 +1,6 @@
 # SET UP
 rm(list = ls())
 library(foreign)
-library(car)
 library(sqldf)
 library(dplyr)
 memory.limit(size=1000000)
@@ -38,7 +37,6 @@ nextracyclist <- round((targetpcycle * length(unique(sp$census_id))) - length(un
 sp$scen_newcyclist <- 0
 set.seed(2018)
 
-
 unique_non_cyclists_df <- sp %>% distinct(census_id, .keep_all = TRUE) %>% filter(cyclist != 1)
 sampled_non_cyclists_df <- sample_n(unique_non_cyclists_df, size = nextracyclist, weight = unique_non_cyclists_df$pcyclist_scen)
 
@@ -49,9 +47,20 @@ sp$scen_newcyclist[sp$census_id %in% sampled_non_cyclists_df$census_id] <- 1 # t
 
 # Merge in probability of cycling a trip by distance age and sex, and cycle speed by age and sex 
 sp$trip_distcat_km=round(sp$trip_distraw_km)
-sp$trip_distcat_km <- car::recode(sp$trip_distcat_km,"0:1=0;2:4=2;5:7=5;8:12=8;13:19=13;20:29=20;30:hi=30")  # Q: COULD DO THIS IN DPLYR INSTEAD?
-sp$older <- sp$agecat
-sp$older <- car::recode(sp$older,"1:3=0;4:6=1") 
+
+sp <-  sp %>% dplyr::mutate(trip_distcat_km = case_when(trip_distcat_km %in% c(0:1) ~ 0,
+                                                                    trip_distcat_km %in% c(2:4) ~ 2,
+                                                                           trip_distcat_km %in% c(5:7) ~ 5,
+                                                                            trip_distcat_km %in% c(8:12) ~ 8,
+                                                                            trip_distcat_km %in% c(13:19) ~ 13,
+                                                                            trip_distcat_km %in% c(20:29) ~ 20,
+                                                                            trip_distcat_km >= 30 ~ 30))
+                                                                                                                             
+  
+sp <-  sp %>% dplyr::mutate(older = case_when(agecat %in% c(1:3) ~ 0,
+                                                        agecat %in% c(4:6) ~ 1))
+                                                        
+
 sp <- left_join(sp, distspeed, by=c("trip_distcat_km", "female", "older"))
 
 # Randomly switch some trips to cycling in new cyclists
@@ -110,40 +119,29 @@ sp$trip_taxidist_km  <- sp$trip_distraw_km
 sp$trip_taxidist_km[!(sp$trip_mainmode %in% c(12))]  <- 0
 
 # Function to aggregate to individual level: Q = HELP!
-agg_to_individ <- function(variable, aggregatedata){
-  aggregatedata <- sqldf('select f.census_id, sum(f.variable) as aggregatedata FROM sp as f GROUP BY f.census_id')
+agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata){
+  # trip_level_dataset <- sp
+  # variable <- 'trip_walktime_hr'
+  # aggregatedata <- 'base_walk_wkhr'
+  # individual_dataset <- sp_ind
+  aggregatedata <- sqldf(paste('select census_id, sum(', variable, ') as ', aggregatedata, 'FROM trip_level_dataset 
+                               GROUP BY census_id'))  
   aggregatedata[is.na(aggregatedata)] <- 0
-  sp_ind <- left_join(sp_ind,aggregatedata, by="census_id")
-  remove(aggregatedata)
+  individual_dataset <- left_join(individual_dataset,aggregatedata, by="census_id")
+  individual_dataset
 }
-
-
-# Walk/cycle/car driver/car passenger/bus/motorbike distance per week, individuals living in la - base + scenario
-###ADD IN WITH FUNCTION
-
 
 # Walk/cycle/driving/ motorbike/bus/train/tube duration per week, individual level - at baseline and scenario
 
 #agg_to_individ(trip_walktime_hr, base_walk_wkhr)
-base_walk_wkhr <- sqldf('select f.census_id, sum(f.trip_walktime_hr) as base_walk_wkhr FROM sp as f GROUP BY f.census_id')
-base_walk_wkhr[is.na(base_walk_wkhr)] <- 0
-sp_ind <- left_join(sp_ind,base_walk_wkhr, by="census_id")
-remove(base_walk_wkhr)
 
-scen_walk_wkhr <- sqldf('select f.census_id, sum(f.scen_trip_walktime_hr) as scen_walk_wkhr FROM sp as f GROUP BY f.census_id')
-scen_walk_wkhr[is.na(scen_walk_wkhr)] <- 0
-sp_ind <- left_join(sp_ind,scen_walk_wkhr, by="census_id")
-remove(scen_walk_wkhr)
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walktime_hr', 'base_walk_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycletime_hr', 'base_cycle_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr')
 
-base_cycle_wkhr <- sqldf('select f.census_id, sum(f.trip_cycletime_hr) as base_cycle_wkhr FROM sp as f GROUP BY f.census_id')
-base_cycle_wkhr[is.na(base_cycle_wkhr)] <- 0
-sp_ind <- left_join(sp_ind,base_cycle_wkhr, by="census_id")
-remove(base_cycle_wkhr)
-
-scen_cycle_wkhr <- sqldf('select f.census_id, sum(f.scen_trip_cycletime_hr) as scen_cycle_wkhr FROM sp as f GROUP BY f.census_id')
-scen_cycle_wkhr[is.na(scen_cycle_wkhr)] <- 0
-sp_ind <- left_join(sp_ind,scen_cycle_wkhr, by="census_id")
-remove(scen_cycle_wkhr)
+# Walk/cycle/car driver/car passenger/bus/motorbike distance per week, individuals living in la - base + scenario
+###ADD IN WITH FUNCTION
 
 # Marginal METs per week, individual
 sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk - 1) * sp_ind$base_walk_wkhr) + sp_ind$sport_wkmmets
