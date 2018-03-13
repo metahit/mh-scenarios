@@ -57,7 +57,7 @@ sp <-  sp %>% dplyr::mutate(trip_distcat_km = case_when(trip_distcat_km %in% c(0
 sp <-  sp %>% dplyr::mutate(older = case_when(agecat %in% c(1:3) ~ 0,
                                                         agecat %in% c(4:6) ~ 1))
                                                         
-
+  
 sp <- left_join(sp, distspeed, by=c("trip_distcat_km", "female", "older"))
 
 # Randomly switch some trips to cycling in new cyclists
