@@ -5,10 +5,11 @@ library(sqldf)
 library(dplyr)
 memory.limit(size=1000000)
 
-## INPUT DATA AND PARAMETERS
+
+## STEP 0: INPUT DATA AND PARAMETERS
 
 # Load data
-sp <-read.dta("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_E06000001temp.dta")
+sp <-read.dta("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_E06000001.dta")
 distspeed <- read.csv("1_InputData/2_OtherInput/NTS_distance_speed.csv")
 
 # Scenario target % cycle
@@ -40,24 +41,21 @@ unique_non_cyclists_df <- sp %>% distinct(census_id, .keep_all = TRUE) %>% filte
 sampled_non_cyclists_df <- sample_n(unique_non_cyclists_df, size = nextracyclist, weight = unique_non_cyclists_df$pcyclist_scen)
 sp$scen_newcyclist[sp$census_id %in% sampled_non_cyclists_df$census_id] <- 1 
 
+
 ## STEP 2: SWITCH TRIPS AMONG NEW CYCLISTS & UPDATE SCENARIO VALUES
 
 # Merge in probability of cycling a trip by distance age and sex, and cycle speed by age and sex 
 sp$trip_distcat_km=round(sp$trip_distraw_km)
 
 sp <-  sp %>% dplyr::mutate(trip_distcat_km = case_when(trip_distcat_km %in% c(0:1) ~ 0,
-                                                                    trip_distcat_km %in% c(2:4) ~ 2,
-                                                                           trip_distcat_km %in% c(5:7) ~ 5,
-                                                                            trip_distcat_km %in% c(8:12) ~ 8,
-                                                                            trip_distcat_km %in% c(13:19) ~ 13,
-                                                                            trip_distcat_km %in% c(20:29) ~ 20,
-                                                                            trip_distcat_km >= 30 ~ 30))
-                                                                                                                             
-  
+                                                        trip_distcat_km %in% c(2:4) ~ 2,
+                                                        trip_distcat_km %in% c(5:7) ~ 5,
+                                                        trip_distcat_km %in% c(8:12) ~ 8,
+                                                        trip_distcat_km %in% c(13:19) ~ 13,
+                                                        trip_distcat_km %in% c(20:29) ~ 20,
+                                                        trip_distcat_km >= 30 ~ 30))
 sp <-  sp %>% dplyr::mutate(older = case_when(agecat %in% c(1:3) ~ 0,
-                                                        agecat %in% c(4:6) ~ 1))
-                                                        
-  
+                                              agecat %in% c(4:6) ~ 1))
 sp <- left_join(sp, distspeed, by=c("trip_distcat_km", "female", "older"))
 
 # Randomly switch some trips to cycling in new cyclists
@@ -71,7 +69,6 @@ sp$trip_walktime_hr <- sp$trip_walktime_min/60
 
 # Initially set scenario values equal to baseline
 sp$scen_trip_mainmode <- sp$trip_mainmode
-#sp$scen_trip_distraw_km <- sp$trip_distraw_km
 sp$scen_trip_durationraw_hr <- sp$trip_durationraw_hr
 sp$scen_trip_cycletime_hr <- sp$trip_cycletime_hr
 sp$scen_trip_walktime_hr <- sp$trip_walktime_hr
@@ -86,11 +83,12 @@ sp$scen_trip_walktime_hr[sp$scen_newmaincycletrip==1] <- 0
 sp$scen_trip_cycledist_km[sp$scen_newmaincycletrip==1] <- sp$trip_distraw_km[sp$scen_newmaincycletrip==1] 
 sp$scen_trip_walkdist_km[sp$scen_newmaincycletrip==1] <- 0 
 
+
 ## STEP 3: AGGREGATE TO INDIVIDUAL LEVEL
 # Make individual dataset
 sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_lsoa", "home_laname", "home_gor", "urban", "female", "agecat", "nonwhite", "zerotrips", "sport_wkmmets")])
 
-# Distance + Duration summaries by mode
+# Distance + Duration summaries by mode, baseline + scenario
 sp$trip_cardrivedist_km  <- sp$trip_distraw_km
 sp$trip_cardrivedist_km[!(sp$trip_mainmode %in% c(3))]  <- 0
 sp$trip_carpassdist_km  <- sp$trip_distraw_km
@@ -102,25 +100,45 @@ sp$trip_busdist_km[!(sp$trip_mainmode %in% c(7:9))]  <- 0
 sp$trip_taxidist_km  <- sp$trip_distraw_km
 sp$trip_taxidist_km[!(sp$trip_mainmode %in% c(12))]  <- 0
 
-sp$trip_cardist_km  <- sp$trip_distraw_km
-sp$trip_cardist_km[!(sp$trip_mainmode %in% c(3:4))]  <- 0
-sp$trip_mbikedist_km  <- sp$trip_distraw_km
-sp$trip_mbikedist_km[!(sp$trip_mainmode %in% c(5))]  <- 0
-sp$trip_busdist_km  <- sp$trip_distraw_km
-sp$trip_busdist_km[!(sp$trip_mainmode %in% c(7:9))]  <- 0
-sp$trip_taxidist_km  <- sp$trip_distraw_km
-sp$trip_tubedist_km[!(sp$trip_mainmode %in% c(10))]  <- 0
-sp$trip_traindist_km  <- sp$trip_distraw_km
-sp$trip_traindist_km[!(sp$trip_mainmode %in% c(11))]  <- 0
-sp$trip_taxidist_km  <- sp$trip_distraw_km
-sp$trip_taxidist_km[!(sp$trip_mainmode %in% c(12))]  <- 0
+sp$scen_trip_cardrivedist_km  <- sp$trip_distraw_km
+sp$scen_trip_cardrivedist_km[!(sp$scen_trip_mainmode %in% c(3))]  <- 0
+sp$scen_trip_carpassdist_km  <- sp$trip_distraw_km
+sp$scen_trip_carpassdist_km[!(sp$scen_trip_mainmode %in% c(4))]  <- 0
+sp$scen_trip_mbikedist_km  <- sp$trip_distraw_km
+sp$scen_trip_mbikedist_km[!(sp$scen_trip_mainmode %in% c(5))]  <- 0
+sp$scen_trip_busdist_km  <- sp$trip_distraw_km
+sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode %in% c(7:9))]  <- 0
+sp$scen_trip_taxidist_km  <- sp$trip_distraw_km
+sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode %in% c(12))]  <- 0
 
-# Function to aggregate to individual level: Q = HELP!
+sp$trip_cartime_hr  <- sp$trip_durationraw_hr
+sp$trip_cartime_hr[!(sp$trip_mainmode %in% c(3:4))]  <- 0
+sp$trip_mbiketime_hr  <- sp$trip_durationraw_hr
+sp$trip_mbiketime_hr[!(sp$trip_mainmode %in% c(5))]  <- 0
+sp$trip_bustime_hr  <- sp$trip_durationraw_hr
+sp$trip_bustime_hr[!(sp$trip_mainmode %in% c(7:9))]  <- 0
+sp$trip_tubetime_hr  <- sp$trip_durationraw_hr
+sp$trip_tubetime_hr[!(sp$trip_mainmode %in% c(10))]  <- 0
+sp$trip_traintime_hr  <- sp$trip_durationraw_hr
+sp$trip_traintime_hr[!(sp$trip_mainmode %in% c(11))]  <- 0
+sp$trip_taxitime_hr  <- sp$trip_durationraw_hr
+sp$trip_taxitime_hr[!(sp$trip_mainmode %in% c(12))]  <- 0
+
+sp$scen_trip_cartime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode %in% c(3:4))]  <- 0
+sp$scen_trip_mbiketime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_mbiketime_hr[!(sp$scen_trip_mainmode %in% c(5))]  <- 0
+sp$scen_trip_bustime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_bustime_hr[!(sp$scen_trip_mainmode %in% c(7:9))]  <- 0
+sp$scen_trip_tubetime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_tubetime_hr[!(sp$scen_trip_mainmode %in% c(10))]  <- 0
+sp$scen_trip_traintime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode %in% c(11))]  <- 0
+sp$scen_trip_taxitime_hr  <- sp$scen_trip_durationraw_hr
+sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode %in% c(12))]  <- 0
+
+# Function to aggregate to individual level
 agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata){
-  # trip_level_dataset <- sp
-  # variable <- 'trip_walktime_hr'
-  # aggregatedata <- 'base_walk_wkhr'
-  # individual_dataset <- sp_ind
   aggregatedata <- sqldf(paste('select census_id, sum(', variable, ') as ', aggregatedata, 'FROM trip_level_dataset 
                                GROUP BY census_id'))  
   aggregatedata[is.na(aggregatedata)] <- 0
@@ -128,20 +146,45 @@ agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, agg
   individual_dataset
 }
 
+# Walk/cycle/car driver/car passenger/bus/motorbike distance per week, individuals living in la - base + scenario
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walkdist_km', 'base_walk_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walkdist_km', 'scen_walk_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycledist_km', 'base_cycle_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycledist_km', 'scen_cycle_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cardrivedist_km', 'base_cardrive_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cardrivedist_km', 'scen_cardrive_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_carpassdist_km', 'base_carpass_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_carpassdist_km', 'scen_carpass_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikedist_km', 'base_mbike_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedist_km', 'scen_mbike_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_busdist_km', 'base_bus_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_busdist_km', 'scen_bus_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxidist_km', 'base_taxi_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxidist_km', 'scen_taxi_wkkm')
+
 # Walk/cycle/driving/ motorbike/bus/train/tube duration per week, individual level - at baseline and scenario
-
-#agg_to_individ(trip_walktime_hr, base_walk_wkhr)
-
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walktime_hr', 'base_walk_wkhr')
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr')
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycletime_hr', 'base_cycle_wkhr')
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr')
-
-# Walk/cycle/car driver/car passenger/bus/motorbike distance per week, individuals living in la - base + scenario
-###ADD IN WITH FUNCTION
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cartime_hr', 'base_car_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cartime_hr', 'scen_car_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbiketime_hr', 'base_mbike_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbiketime_hr', 'scen_mbike_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_bustime_hr', 'base_bus_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_bustime_hr', 'scen_bus_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_tubetime_hr', 'base_tube_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_tubetime_hr', 'scen_tube_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_traintime_hr', 'base_train_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_traintime_hr', 'scen_train_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxitime_hr', 'base_taxi_wkhr')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxitime_hr', 'scen_taxi_wkhr')
 
 # Marginal METs per week, individual
 sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk - 1) * sp_ind$base_walk_wkhr) + sp_ind$sport_wkmmets
 sp_ind$scen_mmetwk <- ((met_cycle - 1) *  sp_ind$scen_cycle_wkhr) + ((met_walk - 1) * sp_ind$scen_walk_wkhr) + sp_ind$sport_wkmmets
 
 # Save dataset
+lad14cd <- unique(sp$home_lad14cd)
+saveRDS(sp_ind, file.path("2_OutputData", paste0("SPind_", lad14cd, ".Rds")))
+
