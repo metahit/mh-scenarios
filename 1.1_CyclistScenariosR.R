@@ -6,7 +6,7 @@ library(dplyr)
 memory.limit(size=1000000)
 
 
-## STEP 0: INPUT DATA AND PARAMETERS
+## STEP 0: INPUT DATA AND PARAMETERS 
 
 # Load data
 sp <-read.dta("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_E06000001.dta")
