@@ -1,8 +1,8 @@
 # SET UP
 rm(list = ls())
 library(foreign)
-library(sqldf)
-library(dplyr)
+# library(sqldf)
+library(tidyverse)
 memory.limit(size=1000000)
 
 
@@ -139,10 +139,15 @@ sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode %in% c(12))]  <- 0
 
 # Function to aggregate to individual level
 agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata){
-  aggregatedata <- sqldf(paste('select census_id, sum(', variable, ') as ', aggregatedata, 'FROM trip_level_dataset 
-                               GROUP BY census_id'))  
-  aggregatedata[is.na(aggregatedata)] <- 0
-  individual_dataset <- left_join(individual_dataset,aggregatedata, by="census_id")
+  
+  # trip_level_dataset <- sp
+  # individual_dataset <- sp_ind
+  # variable <- "trip_walkdist_km"
+  # aggregatedata <- "base_walk_wkkm"
+  df <- trip_level_dataset %>% group_by(census_id) %>% summarise (sum(UQ(as.name(variable))))
+  names(df)[2] <- aggregatedata
+  df[is.na(df)] <- 0
+  individual_dataset <- left_join(individual_dataset,df, by="census_id")
   individual_dataset
 }
 
