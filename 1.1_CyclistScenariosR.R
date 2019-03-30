@@ -8,7 +8,8 @@ memory.limit(size=1000000)
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
 # Load data
-sp <-read.dta("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_E06000001.dta")
+lad14cd <- "E06000022"
+sp <-read.dta(paste0("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_", lad14cd, ".dta"))
 distspeed <- read.csv("1_InputData/2_OtherInput/NTS_distance_speed.csv")
 
 # Scenario target % cycle
@@ -67,7 +68,7 @@ sp$trip_cycletime_hr <- sp$trip_cycletime_min/60
 sp$trip_walktime_hr <- sp$trip_walktime_min/60
 
 # Initially set scenario values equal to baseline
-sp$scen_trip_mainmode <- sp$trip_mainmode
+sp$scen_trip_mainmode_det <- sp$trip_mainmode_det
 sp$scen_trip_durationraw_hr <- sp$trip_durationraw_hr
 sp$scen_trip_cycletime_hr <- sp$trip_cycletime_hr
 sp$scen_trip_walktime_hr <- sp$trip_walktime_hr
@@ -75,7 +76,7 @@ sp$scen_trip_cycledist_km <- sp$trip_cycledist_km
 sp$scen_trip_walkdist_km <- sp$trip_walkdist_km
 
 # Update scenario values for the new cycle trips (distance unchanged)
-sp$scen_trip_mainmode[sp$scen_newmaincycletrip==1] <- 2 
+sp$scen_trip_mainmode_det[sp$scen_newmaincycletrip==1] <- 3 
 sp$scen_trip_durationraw_hr[sp$scen_newmaincycletrip==1] <- round(sp$trip_distraw_km[sp$scen_newmaincycletrip==1] / sp$trip_cyclespeed_kmhr[sp$scen_newmaincycletrip==1])
 sp$scen_trip_cycletime_hr[sp$scen_newmaincycletrip==1] <- sp$scen_trip_durationraw_hr[sp$scen_newmaincycletrip==1] 
 sp$scen_trip_walktime_hr[sp$scen_newmaincycletrip==1] <- 0 
@@ -85,60 +86,64 @@ sp$scen_trip_walkdist_km[sp$scen_newmaincycletrip==1] <- 0
 
 ## STEP 3: AGGREGATE TO INDIVIDUAL LEVEL
 # Make individual dataset
-sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_lsoa", "home_laname", "home_gor", "urban", "female", "agecat", "nonwhite", "zerotrips", "sport_wkmmets")])
+sp$demogindex <- (sp$female*100)+(sp$agecat_det)
+sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_lsoa", "home_laname", "home_gor", "urban", "female", "agecat_det", "demogindex", "zerotrips", "sport_wkmmets")])
 
 # Distance + Duration summaries by mode, baseline + scenario
 sp$trip_cardrivedist_km  <- sp$trip_distraw_km
-sp$trip_cardrivedist_km[!(sp$trip_mainmode %in% c(3))]  <- 0
+sp$trip_cardrivedist_km[!(sp$trip_mainmode_det %in% c(5:6))]  <- 0
 sp$trip_carpassdist_km  <- sp$trip_distraw_km
-sp$trip_carpassdist_km[!(sp$trip_mainmode %in% c(4))]  <- 0
-sp$trip_mbikedist_km  <- sp$trip_distraw_km
-sp$trip_mbikedist_km[!(sp$trip_mainmode %in% c(5))]  <- 0
+sp$trip_carpassdist_km[!(sp$trip_mainmode_det %in% c(7:8))]  <- 0
+sp$trip_mbikedrivedist_km  <- sp$trip_distraw_km
+sp$trip_mbikedrivedist_km[!(sp$trip_mainmode_det %in% c(9:10))]  <- 0
+sp$trip_mbikepassdist_km  <- sp$trip_distraw_km
+sp$trip_mbikepassdist_km[!(sp$trip_mainmode_det %in% c(11:12))]  <- 0
 sp$trip_busdist_km  <- sp$trip_distraw_km
-sp$trip_busdist_km[!(sp$trip_mainmode %in% c(7:9))]  <- 0
+sp$trip_busdist_km[!(sp$trip_mainmode_det %in% c(18:20))]  <- 0
 sp$trip_taxidist_km  <- sp$trip_distraw_km
-sp$trip_taxidist_km[!(sp$trip_mainmode %in% c(12))]  <- 0
+sp$trip_taxidist_km[!(sp$trip_mainmode_det %in% c(26:27))]  <- 0
 
 sp$scen_trip_cardrivedist_km  <- sp$trip_distraw_km
-sp$scen_trip_cardrivedist_km[!(sp$scen_trip_mainmode %in% c(3))]  <- 0
+sp$scen_trip_cardrivedist_km[!(sp$scen_trip_mainmode_det %in% c(5:6))]  <- 0
 sp$scen_trip_carpassdist_km  <- sp$trip_distraw_km
-sp$scen_trip_carpassdist_km[!(sp$scen_trip_mainmode %in% c(4))]  <- 0
-sp$scen_trip_mbikedist_km  <- sp$trip_distraw_km
-sp$scen_trip_mbikedist_km[!(sp$scen_trip_mainmode %in% c(5))]  <- 0
+sp$scen_trip_carpassdist_km[!(sp$scen_trip_mainmode_det %in% c(7:8))]  <- 0
+sp$scen_trip_mbikedrivedist_km  <- sp$trip_distraw_km
+sp$scen_trip_mbikedrivedist_km[!(sp$scen_trip_mainmode_det %in% c(9:10))]  <- 0
+sp$scen_trip_mbikepassdist_km  <- sp$trip_distraw_km
+sp$scen_trip_mbikepassdist_km[!(sp$scen_trip_mainmode_det %in% c(11:12))]  <- 0
 sp$scen_trip_busdist_km  <- sp$trip_distraw_km
-sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode %in% c(7:9))]  <- 0
+sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
 sp$scen_trip_taxidist_km  <- sp$trip_distraw_km
-sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode %in% c(12))]  <- 0
+sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
 
 sp$trip_cartime_hr  <- sp$trip_durationraw_hr
-sp$trip_cartime_hr[!(sp$trip_mainmode %in% c(3:4))]  <- 0
+sp$trip_cartime_hr[!(sp$trip_mainmode_det %in% c(5:8))]  <- 0
 sp$trip_mbiketime_hr  <- sp$trip_durationraw_hr
-sp$trip_mbiketime_hr[!(sp$trip_mainmode %in% c(5))]  <- 0
+sp$trip_mbiketime_hr[!(sp$trip_mainmode_det %in% c(9:12))]  <- 0
 sp$trip_bustime_hr  <- sp$trip_durationraw_hr
-sp$trip_bustime_hr[!(sp$trip_mainmode %in% c(7:9))]  <- 0
+sp$trip_bustime_hr[!(sp$trip_mainmode_det %in% c(18:20))]  <- 0
 sp$trip_tubetime_hr  <- sp$trip_durationraw_hr
-sp$trip_tubetime_hr[!(sp$trip_mainmode %in% c(10))]  <- 0
+sp$trip_tubetime_hr[!(sp$trip_mainmode_det %in% c(22))]  <- 0
 sp$trip_traintime_hr  <- sp$trip_durationraw_hr
-sp$trip_traintime_hr[!(sp$trip_mainmode %in% c(11))]  <- 0
+sp$trip_traintime_hr[!(sp$trip_mainmode_det %in% c(23:24))]  <- 0
 sp$trip_taxitime_hr  <- sp$trip_durationraw_hr
-sp$trip_taxitime_hr[!(sp$trip_mainmode %in% c(12))]  <- 0
+sp$trip_taxitime_hr[!(sp$trip_mainmode_det %in% c(26:27))]  <- 0
 
 sp$scen_trip_cartime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode %in% c(3:4))]  <- 0
+sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode_det %in% c(5:8))]  <- 0
 sp$scen_trip_mbiketime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_mbiketime_hr[!(sp$scen_trip_mainmode %in% c(5))]  <- 0
+sp$scen_trip_mbiketime_hr[!(sp$scen_trip_mainmode_det %in% c(9:12))]  <- 0
 sp$scen_trip_bustime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_bustime_hr[!(sp$scen_trip_mainmode %in% c(7:9))]  <- 0
+sp$scen_trip_bustime_hr[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
 sp$scen_trip_tubetime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_tubetime_hr[!(sp$scen_trip_mainmode %in% c(10))]  <- 0
+sp$scen_trip_tubetime_hr[!(sp$scen_trip_mainmode_det %in% c(22))]  <- 0
 sp$scen_trip_traintime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode %in% c(11))]  <- 0
+sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode_det %in% c(23:24))]  <- 0
 sp$scen_trip_taxitime_hr  <- sp$scen_trip_durationraw_hr
-sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode %in% c(12))]  <- 0
+sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
 
 # Function to aggregate to individual level
 agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata){
-  
   df <- trip_level_dataset %>% group_by(census_id) %>% summarise (sum(UQ(as.name(variable))))
   names(df)[2] <- aggregatedata
   df[is.na(df)] <- 0
@@ -155,8 +160,10 @@ sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cardrivedist_km', 'base_cardrive_wkkm
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cardrivedist_km', 'scen_cardrive_wkkm')
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_carpassdist_km', 'base_carpass_wkkm')
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_carpassdist_km', 'scen_carpass_wkkm')
-sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikedist_km', 'base_mbike_wkkm')
-sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedist_km', 'scen_mbike_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikedrivedist_km', 'base_mbikedrive_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedrivedist_km', 'scen_mbikedrive_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikepassdist_km', 'base_mbikepass_wkkm')
+sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikepassdist_km', 'scen_mbikepass_wkkm')
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_busdist_km', 'base_bus_wkkm')
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_busdist_km', 'scen_bus_wkkm')
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxidist_km', 'base_taxi_wkkm')
@@ -185,6 +192,5 @@ sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk -
 sp_ind$scen_mmetwk <- ((met_cycle - 1) *  sp_ind$scen_cycle_wkhr) + ((met_walk - 1) * sp_ind$scen_walk_wkhr) + sp_ind$sport_wkmmets
 
 # Save dataset
-lad14cd <- unique(sp$home_lad14cd)
 saveRDS(sp_ind, file.path("2_OutputData", paste0("SPind_", lad14cd, ".Rds")))
 
