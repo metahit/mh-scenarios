@@ -98,7 +98,6 @@ ADD_BUS_DRIVERS <<- F
 ## 2 ##
 ## setting all the global variables at the beginning to minimise ITHIM computation
 ## copied from ithimr::run_ithim_setup
-ithim_object <- list()
 
 ## SET GLOBAL VALUES
 ## PROGRAMMING VARIABLES
@@ -109,7 +108,6 @@ if(is.null(PATH_TO_LOCAL_DATA)){
 }else{
   PATH_TO_LOCAL_DATA <<- PATH_TO_LOCAL_DATA
 }
-path_to_injury_model_and_data <- 'data/injuries/'
 
 ## fixed parameters for AP inhalation
 BASE_LEVEL_INHALATION_RATE <<- 1
@@ -134,15 +132,8 @@ default_speeds <- list(
   rail=35,
   shared_taxi=21
 )
-
 TRAVEL_MODES <<- tolower(names(default_speeds))
 MODE_SPEEDS <<- data.frame(stage_mode = TRAVEL_MODES, speed = unlist(default_speeds), stringsAsFactors = F)
-cat('\n  SPEEDS \n\n',file=setup_call_summary_filename,append=F)
-#print(MODE_SPEEDS)
-for(i in 1:nrow(MODE_SPEEDS)) {
-  cat(paste0(MODE_SPEEDS[i,]),file=setup_call_summary_filename,append=T); 
-  cat('\n',file=setup_call_summary_filename,append=T)
-}
 
 ## default emission contributions that can be edited by input. 
 default_emission_inventory <- list(
@@ -157,20 +148,14 @@ default_emission_inventory <- list(
   big_truck=0.711,
   other=0.082
 )
-names(default_emission_inventory) <- tolower(names(default_emission_inventory))
-
+#names(default_emission_inventory) <- tolower(names(default_emission_inventory))
 EMISSION_INVENTORY <<- default_emission_inventory
-cat('\n  EMISSION INVENTORY \n\n',file=setup_call_summary_filename,append=T)
-for(i in 1:length(default_emission_inventory)) {
-  cat(paste(names(EMISSION_INVENTORY)[i],EMISSION_INVENTORY[[i]]),file=setup_call_summary_filename,append=T); 
-  cat('\n',file=setup_call_summary_filename,append=T)
-}
 
 #####################################################################
 ## LOAD DATA
 ## copied from ithimr ithim_load_data
 global_path <- file.path(find.package('ithimr',lib.loc=.libPaths()), 'extdata/global/')
-
+## for windows??
 global_path <- paste0(global_path, "/")
 
 ## DATA FILES FOR MODEL  
@@ -208,7 +193,7 @@ synth_pop <- readRDS(filename)
 
 # GBD file needs to have the following columns: 
 # age (=label, e.g. 15-49)
-# sex (=Male or Female)
+# sex (=male or female)
 # measure
 # cause (GBD_DATA$cause matches DISEASE_INVENTORY$GBD_name)
 # metric
@@ -218,6 +203,8 @@ GBD_DATA <- read_csv(filename,col_types = cols())
 filename <- paste0(local_path,CITY,"/population.csv")
 demographic <- read_csv(filename,col_types = cols())
 demographic$dem_index <- 1:nrow(demographic)
+
+## find min and max age from AGE_RANGE, trips, and demographic.
 age_category <- demographic$age
 max_age <- max(as.numeric(sapply(age_category,function(x)strsplit(x,'-')[[1]][2])))
 max_age <- min(max_age,AGE_RANGE[2])
@@ -230,21 +217,26 @@ demographic <- demographic[,names(demographic)!='population']
 names(demographic)[which(names(demographic)=='age')] <- 'age_cat'
 DEMOGRAPHIC <<- demographic
 
-# get age-category details from population data
+# get age-category details from (modified) population data
 AGE_CATEGORY <<- unique(POPULATION$age)
 AGE_LOWER_BOUNDS <<- as.numeric(sapply(AGE_CATEGORY,function(x)strsplit(x,'-')[[1]][1]))
 MAX_AGE <<- max(as.numeric(sapply(AGE_CATEGORY,function(x)strsplit(x,'-')[[1]][2])))
 
-
+## now process GBD_DATA
+# keep named subset of diseases
 disease_names <- c(as.character(DISEASE_INVENTORY$GBD_name),'Road injuries')
 GBD_DATA <- subset(GBD_DATA,cause_name%in%disease_names)
+# keep entries in correct age range
 GBD_DATA$min_age <- as.numeric(sapply(GBD_DATA$age_name,function(x)str_split(x,' to ')[[1]][1]))
 GBD_DATA$max_age <- as.numeric(sapply(GBD_DATA$age_name,function(x)str_split(x,' to ')[[1]][2]))
 GBD_DATA <- subset(GBD_DATA,max_age>=AGE_LOWER_BOUNDS[1])
 GBD_DATA <- subset(GBD_DATA,min_age<=MAX_AGE)
+##!! hard-coded rename...
 names(GBD_DATA)[c(1,3,4,5)] <- c('measure','sex','age','cause')
+# ensure lower case
 GBD_DATA$sex <- tolower(GBD_DATA$sex)
 
+## get burden of disease for each city by scaling according to population
 burden_of_disease <- expand.grid(measure=unique(GBD_DATA$measure),sex=unique(POPULATION$sex),age=unique(POPULATION$age),
                                  cause=disease_names,stringsAsFactors = F)
 burden_of_disease <- left_join(burden_of_disease,POPULATION,by=c('age','sex'))
@@ -259,15 +251,12 @@ burden_of_disease$rate <- apply(burden_of_disease,1,
                                   sum(subtab$val)/sum(subtab$population)
                                 }
 )
-
 burden_of_disease$burden <- burden_of_disease$population*burden_of_disease$rate
+##!! if an entry is missing in GBD, we set it to zero. we should also issue a warning.
 burden_of_disease$burden[is.na(burden_of_disease$burden)] <- 0
-
-## scale disease burden from country to city using populations
-#burden_of_disease <- left_join(GBD_DATA[,!colnames(GBD_DATA)=='population'],DEMOGRAPHIC,by=c('age','sex'))
-#burden_of_disease$burden <- GBD_DATA$burden*burden_of_disease$population/GBD_DATA$population
 DISEASE_BURDEN <<- burden_of_disease
 
+## for tigthat, use GBD to scale from fatalities to YLL. calculate this ratio here.
 gbd_injuries <- DISEASE_BURDEN[which(DISEASE_BURDEN$cause == "Road injuries"),]
 gbd_injuries$sex_age <- paste0(gbd_injuries$sex,"_",gbd_injuries$age)
 ## calculating the ratio of YLL to deaths for each age and sex group
@@ -281,7 +270,7 @@ GBD_INJ_YLL <<- gbd_inj_yll
 #####################################################################
 ## 3 ##
 ## SET PARAMETERS
-ithim_object$parameters <- ithimr::ithim_setup_parameters(NSAMPLES=NSAMPLES,
+parameters <- ithimr::ithim_setup_parameters(NSAMPLES=NSAMPLES,
                                                   MMET_CYCLING=MMET_CYCLING,
                                                   MMET_WALKING=MMET_WALKING,
                                                   PM_CONC_BASE=PM_CONC_BASE,  
@@ -322,41 +311,42 @@ synth_pop$participant_id <- 1:nrow(synth_pop)
 synthetic_pop <- synth_pop[,names(synth_pop)%in%c('participant_id','dem_index')]
 demographic <- DEMOGRAPHIC
 demographic$age <- sapply(demographic$age_cat,function(x)strsplit(x,'-')[[1]][1])
+##!! not sure we need this as a separate object but, for now...
 SYNTHETIC_POPULATION <<- left_join(synthetic_pop,demographic[,names(demographic)%in%c('dem_index','age')],by='dem_index')
 
 #####################################################################
-## set scenario variables:
+## set scenario variables. these can (should) be determined from input data rather than hard coded.
 NSCEN <<- 1
 SCEN_SHORT_NAME <<- c('base','scen')
 SCEN <<- c('Baseline','Scenario 1')
+
+## we effectively have a "SYNTHETIC_POPULATION" per scenario.
 pp_summary <- list()
 for(scenario in SCEN_SHORT_NAME){
   scenario_name_flag <- sapply(names(synth_pop),function(x)grepl(paste0(scenario,'_'),x))
   scenario_names <- names(synth_pop)[scenario_name_flag]
+  # choose subset for each scenario per person summary
   pp_summary[[scenario]] <- synth_pop[,names(synth_pop)%in%c('participant_id','dem_index',scenario_names)]
-  ## assuming mmetwk is total work and leisure (= nontravel) mmets
+  ##!! assuming mmetwk is total work and leisure (= nontravel) mmets -- but is it different in different scenarios?
   names(pp_summary[[scenario]])[names(pp_summary[[scenario]])==paste0(scenario,'_mmetwk')] <- 'work_ltpa_marg_met'
   names(pp_summary[[scenario]]) <- sapply(names(pp_summary[[scenario]]),function(x)gsub(paste0(scenario,'_'),'',x))
 }
-ithim_object$pp_summary <- pp_summary
-
-## we could use something like this function if we wanted to resample travel
-#ithim_object$pp_summary <- generate_synthetic_travel_data(trip_scen_sets)
 
 # Generate distance and duration matrices
-dist_and_dir <- dist_dur_tbls(ithim_object$pp_summary)
-ithim_object$dist <- dist_and_dir$dist
-ithim_object$dur <- dist_and_dir$dur
+dist_and_dir <- dist_dur_tbls(pp_summary)
+dist <- dist_and_dir$dist
+dur <- dist_and_dir$dur
 
+# set as data.table for speed
+for(scenario in SCEN_SHORT_NAME) pp_summary[[scenario]] <- setDT(pp_summary[[scenario]])
 
-for(scenario in SCEN_SHORT_NAME) ithim_object$pp_summary[[scenario]] <- setDT(ithim_object$pp_summary[[scenario]])
 #####################################################################
 ## 5 ## 
 ## ITHIM health calculation
 
 ## (1) AP PATHWAY
 # Calculated PM2.5 concentrations
-(pm_conc <- scenario_pm_calculations(ithim_object$dist,ithim_object$pp_summary))
+(pm_conc <- scenario_pm_calculations(dist,pp_summary))
 scenario_pm <- pm_conc$scenario_pm
 pm_conc_pp <- pm_conc$pm_conc_pp
 # Air pollution calculation
@@ -369,7 +359,7 @@ pm_conc_pp <- pm_conc$pm_conc_pp
 ## pp_summary and SYNTHETIC_POPULATION are basically the same thing.
 # Only difference is pp_summary is a list for scenarios. This could be more efficient.
 # this function differs from ithim-r because mmets differ in baseline and scenario
-(mmets_pp <- total_mmet(ithim_object$pp_summary))
+(mmets_pp <- total_mmet(pp_summary))
 # Physical activity calculation
 (RR_PA_calculations <- ithimr::gen_pa_rr(mmets_pp))
 
@@ -382,7 +372,8 @@ pm_conc_pp <- pm_conc$pm_conc_pp
 
 #####################################################################
 ## (4) INJURIES
-# Injuries calculation
+# get data and model
+path_to_injury_model_and_data <- 'data/injuries/'
 injury_table <- readRDS(paste0(path_to_injury_model_and_data,'processed_injuries_9.Rds'))
 baseline_injury_model <- list()
 for(i in 1:2){
@@ -392,7 +383,6 @@ for(i in 1:2){
   }
 }
 
-
 # get city data
 city_table <- injury_table
 for(i in 1:2)
@@ -401,6 +391,7 @@ for(i in 1:2)
 ## for each scenario, add/subtract distance
 
 ##!! copied from add_distance_to_injury
+# get indices for fast matching data
 roads <- unique(injury_table[[1]][[1]]$road)
 model_modes <- c('pedestrian','cyclist','motorcycle','car/taxi')
 mode_proportions <- matrix(0,nrow=length(roads),ncol=length(model_modes))
@@ -417,35 +408,54 @@ mode_labels <- paste0(modes,'_dist')
 distance_columns <- colnames(pp_summary[[1]])%in%c(mode_labels)
 
 injury_deaths <- list()
+# get prediction for baseline (using smoothed data, not raw data)
 for(i in 1:2)
   for(j in 1:2)
     city_table[[i]][[j]]$pred <- predict(baseline_injury_model[[i]][[j]],newdata=city_table[[i]][[j]],type='response')
 injury_predictions <- predict_injuries(city_table)
 injury_deaths[[1]] <- injury_predictions[[1]] 
+# store baseline data
 baseline_city_table <- city_table
+# for each scenario, add/subtract observed change in travel to/from smoothed baseline data
 for(scen in 1:NSCEN+1){
   city_table <- baseline_city_table
+  # get difference between scenario and baseline
   scen_diff <- pp_summary[[scen]][,distance_columns,with=F] - pp_summary[[1]][,distance_columns,with=F]
   scen_diff$dem_index <- pp_summary[[1]]$dem_index
+  # sum over modes and groups
   scen_diff_dem <- scen_diff[,.(pedestrian=sum(walking_dist),cyclist=sum(bicycle_dist),'car/taxi'=sum(car_dist),motorcycle=sum(motorcycle_dist)),by='dem_index']
   
+  # casualty distances
   for(j in 1:2){
+    # get indices to match
     road_index <- match(city_table[[1]][[j]]$road,roads)
     mode_index <- match(city_table[[1]][[j]]$cas_mode,model_modes)
+    # add/subtract mode-group distances according to road proportions
+    ##!! test this
     new_cas_dist <- city_table[[1]][[j]]$cas_distance + as.data.frame(scen_diff_dem)[cbind(city_table[[1]][[j]]$cas_index,mode_index+1)] * mode_proportions[cbind(road_index,mode_index)]
     ##!! some negative distances.
     new_cas_dist[new_cas_dist<0] <- 0
+    # edit dataset with new distances
     city_table[[1]][[j]]$cas_distance <- new_cas_dist
   }
   
+  # striker distances
   for(i in 1:2){
+    # get indices to match
     road_index <- match(city_table[[i]][[1]]$road,roads)
     mode_index <- match(city_table[[i]][[1]]$cas_mode,model_modes)
+    # add/subtract mode-group distances according to road proportions
+    ##!! test this
     new_str_dist <- city_table[[i]][[1]]$strike_distance + as.data.frame(scen_diff_dem)[cbind(city_table[[i]][[1]]$strike_index,mode_index+1)] * mode_proportions[cbind(road_index,mode_index)]
     ##!! some negative distances.
     new_str_dist[new_str_dist<0] <- 0
+    # edit dataset with new distances
     city_table[[i]][[1]]$strike_distance <- new_str_dist
   }
+  # get prediction for scenario using modified smoothed data, not raw data
+  for(i in 1:2)
+    for(j in 1:2)
+      city_table[[i]][[j]]$pred <- predict(baseline_injury_model[[i]][[j]],newdata=city_table[[i]][[j]],type='response')
   injury_predictions <- predict_injuries(city_table)
   injury_deaths[[scen]] <- injury_predictions[[1]] 
 }
@@ -467,4 +477,13 @@ if(constant_mode) pathway_hb <- health_burden(RR_PA_AP_calculations,deaths_yll_i
 
 
 #####################################################################
+## plot
+{x11(width=9,height=6); par(mar=c(6,5,1,1),mfrow=c(1,2))
+  for(type in c('deaths','ylls')){
+    plot_cols <- sapply(names(hb[[type]]),function(x)grepl('scen',x))
+    outcomes <- colSums(hb[[type]][,plot_cols])
+    names(outcomes) <- sapply(names(outcomes),function(x)last(strsplit(x,'_')[[1]]))
+    barplot(outcomes,las=2,cex.axis=1.5,cex.lab=1.5,ylab=paste0('Number of ',type,' averted in Scenario'),xlab='',cex.names=1.5)
+  }
+}
 
