@@ -373,7 +373,7 @@ system.time(RR_PA_AP_calculations <- combined_rr_ap_pa(RR_PA_calculations,RR_AP_
 #####################################################################
 ## (4) INJURIES
 # get data and model
-path_to_injury_model_and_data <- 'data/injuries/'
+path_to_injury_model_and_data <- 'injury_processing/rds_storage/'
 injury_table <- readRDS(paste0(path_to_injury_model_and_data,'processed_injuries_9.Rds'))
 baseline_injury_model <- list()
 for(i in 1:2){

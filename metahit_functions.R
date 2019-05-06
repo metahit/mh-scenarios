@@ -119,7 +119,7 @@ scenario_pm_calculations <- function(dist,pp_summary){
     # calculate non-travel air inhalation
     non_transport_air_inhaled <- (24-scen_travel$on_road_dur/60)*BASE_LEVEL_INHALATION_RATE
     # concentration of pm inhaled = total pm inhaled / total air inhaled
-    pm_conc <- ((non_transport_air_inhaled * as.numeric(conc_pm[i])) + vent_travel$on_road_pm)#/(non_transport_air_inhaled+individual_data$air_inhaled)
+    pm_conc <- ((non_transport_air_inhaled * as.numeric(conc_pm[i])) + scen_travel$on_road_pm)#/(non_transport_air_inhaled+individual_data$air_inhaled)
     # match individual ids to set per person pm exposure
     pm_conc_pp[[paste0('pm_conc_',SCEN_SHORT_NAME[i])]] <- pm_conc/24 * conc_pm[i]
   }
