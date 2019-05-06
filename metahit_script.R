@@ -345,12 +345,12 @@ for(scenario in SCEN_SHORT_NAME) pp_summary[[scenario]] <- setDT(pp_summary[[sce
 ## ITHIM health calculation
 
 ## (1) AP PATHWAY
-# Calculated PM2.5 concentrations
-(pm_conc <- scenario_pm_calculations(dist,pp_summary))
+# Calculate PM2.5 concentrations
+system.time(pm_conc <- scenario_pm_calculations(dist,pp_summary))
 scenario_pm <- pm_conc$scenario_pm
 pm_conc_pp <- pm_conc$pm_conc_pp
-# Air pollution calculation
-(RR_AP_calculations <- ithimr::gen_ap_rr(pm_conc_pp))
+# Air pollution DR calculation
+system.time(RR_AP_calculations <- ithimr::gen_ap_rr(pm_conc_pp))
 
 
 #####################################################################
@@ -359,15 +359,15 @@ pm_conc_pp <- pm_conc$pm_conc_pp
 ## pp_summary and SYNTHETIC_POPULATION are basically the same thing.
 # Only difference is pp_summary is a list for scenarios. This could be more efficient.
 # this function differs from ithim-r because mmets differ in baseline and scenario
-(mmets_pp <- total_mmet(pp_summary))
+system.time(mmets_pp <- total_mmet(pp_summary))
 # Physical activity calculation
-(RR_PA_calculations <- ithimr::gen_pa_rr(mmets_pp))
+system.time(RR_PA_calculations <- ithimr::gen_pa_rr(mmets_pp))
 
 
 #####################################################################
 ## (3) COMBINE (1) AND (2)
 # Physical activity and air pollution combined
-(RR_PA_AP_calculations <- combined_rr_ap_pa(RR_PA_calculations,RR_AP_calculations))
+system.time(RR_PA_AP_calculations <- combined_rr_ap_pa(RR_PA_calculations,RR_AP_calculations))
 
 
 #####################################################################
@@ -407,13 +407,14 @@ modes <- c('walking','bicycle','motorcycle','car')
 mode_labels <- paste0(modes,'_dist')
 distance_columns <- colnames(pp_summary[[1]])%in%c(mode_labels)
 
-injury_deaths <- list()
+injury_deaths <- secondary_deaths <- list()
 # get prediction for baseline (using smoothed data, not raw data)
 for(i in 1:2)
   for(j in 1:2)
     city_table[[i]][[j]]$pred <- predict(baseline_injury_model[[i]][[j]],newdata=city_table[[i]][[j]],type='response')
 injury_predictions <- predict_injuries(city_table)
 injury_deaths[[1]] <- injury_predictions[[1]] 
+secondary_deaths[[1]] <- injury_predictions[[2]] 
 # store baseline data
 baseline_city_table <- city_table
 # for each scenario, add/subtract observed change in travel to/from smoothed baseline data
@@ -443,7 +444,7 @@ for(scen in 1:NSCEN+1){
   for(i in 1:2){
     # get indices to match
     road_index <- match(city_table[[i]][[1]]$road,roads)
-    mode_index <- match(city_table[[i]][[1]]$cas_mode,model_modes)
+    mode_index <- match(city_table[[i]][[1]]$strike_mode,model_modes)
     # add/subtract mode-group distances according to road proportions
     ##!! test this
     new_str_dist <- city_table[[i]][[1]]$strike_distance + as.data.frame(scen_diff_dem)[cbind(city_table[[i]][[1]]$strike_index,mode_index+1)] * mode_proportions[cbind(road_index,mode_index)]
@@ -456,14 +457,18 @@ for(scen in 1:NSCEN+1){
   for(i in 1:2)
     for(j in 1:2)
       city_table[[i]][[j]]$pred <- predict(baseline_injury_model[[i]][[j]],newdata=city_table[[i]][[j]],type='response')
+  # summarise predicted fatalities
   injury_predictions <- predict_injuries(city_table)
+  # store results
   injury_deaths[[scen]] <- injury_predictions[[1]] 
+  secondary_deaths[[scen]] <- injury_predictions[[2]] 
 }
-
+# convert to ithimr format
 injuries <- cbind(do.call(rbind,injury_deaths),rep(SCEN,each=nrow(injury_deaths[[1]])))
 names(injuries) <- c('dem_index','Deaths','scenario')
-
+# compute ylls from deaths
 (deaths_yll_injuries <- injury_death_to_yll(injuries))
+# store reference number of deaths and ylls
 ref_injuries <- deaths_yll_injuries$ref_injuries
 
 

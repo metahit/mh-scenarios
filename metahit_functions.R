@@ -102,70 +102,40 @@ scenario_pm_calculations <- function(dist,pp_summary){
   travel_modes <- colnames(pp_summary2[[1]])[travel_indices]
   vent_modes <- match(travel_modes,vent_rates$stage_mode)
   
-  
-  #trip_set <- left_join(trip_scen_sets,vent_rates,'stage_mode')
-  # litres of air inhaled are the product of the ventilation rate and the time (hours/60) spent travelling by that mode
-  #trip_set$on_road_air <- trip_set$stage_duration*trip_set$vent_rate / 60 # L
-  # get indices for quick matching of values
-  #scen_index <- match(trip_set$scenario,SCEN)
-  # ordered pm values
-  #scen_pm <- as.numeric(conc_pm[scen_index])
-  # ordered ratios based on scenario and open/closed mode
-  #scen_ratio <- ratio_by_mode[cbind(trip_set$vehicle_ratio_index,scen_index)]
-  # pm dose in mg as the product of the air inhaled, the background pm, and the exposure ratio
-  #trip_set$pm_dose <- trip_set$on_road_air * scen_pm * scen_ratio # mg
-  
   # prepare individual-level dataset
-  synth_pop <- SYNTHETIC_POPULATION
+  pm_conc_pp <- SYNTHETIC_POPULATION
+  vent_multiplier <- repmat(vent_rates$vent_rate[vent_modes],nrow(pm_conc_pp),1)/60
+  vent_and_ratio_multiplier <- vent_multiplier*repmat(ratio_by_mode[vent_rates$vehicle_ratio_index[vent_modes],1],nrow(pm_conc_pp),1)
   # compute individual-level pm scenario by scenario
   for (i in 1:length(SCEN)){
-    # initialise to background. This means persons who undertake zero travel get this value.
-    synth_pop[[paste0('pm_conc_',SCEN_SHORT_NAME[i])]] <- conc_pm[i]
-    # take trips from this scenario, and exclude trips by individuals not in the synthetic population (which might be truck trips)
-    #scen_trips <- subset(trip_set,scenario == SCEN[i]&participant_id%in%synth_pop$participant_id)
-    # summarise individual-level time on road, pm inhaled, and air inhaled
-    #individual_data <- setDT(scen_trips)[,.(on_road_dur = sum(stage_duration,na.rm=TRUE), 
-    #                                        on_road_pm = sum(pm_dose,na.rm=TRUE), 
-    #                                        air_inhaled = sum(on_road_air,na.rm=TRUE)),by='participant_id']
     
-    scen_trips <- pp_summary[[i]]
-    scen_trips$on_road_dur <- rowSums(scen_trips[,travel_indices,with=F])
-    scen_trips$air_inhaled <- rowSums(scen_trips[,travel_indices,with=F]*repmat(vent_rates$vent_rate[vent_modes],nrow(scen_trips),1))/60
-    scen_trips$on_road_pm <- rowSums(scen_trips[,travel_indices,with=F]*
-                                       repmat(vent_rates$vent_rate[vent_modes],nrow(scen_trips),1)*
-                                       repmat(ratio_by_mode[vent_rates$vehicle_ratio_index[vent_modes],1],nrow(scen_trips),1)
-                                     /60 * conc_pm[i])
-    
-    individual_data <- scen_trips[,-travel_indices,with=F]
+    scen_travel <- pp_summary[[i]]
+    scen_travel[, on_road_dur := Reduce(`+`, .SD), .SDcols=travel_indices]
+    #vent_travel <- scen_travel[,travel_indices,with=F] * vent_and_ratio_multiplier
+    scen_travel[, on_road_pm := Reduce(`+`, lapply(seq_along(.SD)[travel_indices],function(x)(.SD[[x]]*vent_and_ratio_multiplier[,x]))), .SDcols=names(scen_travel)[travel_indices]]
+    #vent_travel[, on_road_pm := Reduce(`+`, .SD), .SDcols=names(vent_travel)]
     
     ## PM2.5 inhalation = total mg inhaled / total volume inhaled
     # calculate non-travel air inhalation
-    non_transport_air_inhaled <- (24-individual_data$on_road_dur/60)*BASE_LEVEL_INHALATION_RATE
+    non_transport_air_inhaled <- (24-scen_travel$on_road_dur/60)*BASE_LEVEL_INHALATION_RATE
     # concentration of pm inhaled = total pm inhaled / total air inhaled
-    pm_conc <- ((non_transport_air_inhaled * as.numeric(conc_pm[i])) + individual_data$on_road_pm)#/(non_transport_air_inhaled+individual_data$air_inhaled)
+    pm_conc <- ((non_transport_air_inhaled * as.numeric(conc_pm[i])) + vent_travel$on_road_pm)#/(non_transport_air_inhaled+individual_data$air_inhaled)
     # match individual ids to set per person pm exposure
-    synth_pop[[paste0('pm_conc_',SCEN_SHORT_NAME[i])]][match(individual_data[,participant_id],synth_pop$participant_id)] <- pm_conc/24
+    pm_conc_pp[[paste0('pm_conc_',SCEN_SHORT_NAME[i])]] <- pm_conc/24 * conc_pm[i]
   }
   
   #####PM normalise
-  ##currently not normalising
-  mean_conc <- rep(0,length(SCEN_SHORT_NAME))
-  
+  ## Rahul made changes here/./-- no normalisation  
   ## calculating means of individual-level concentrations
-  mean_conc <- mean(synth_pop[[paste0("pm_conc_", SCEN_SHORT_NAME[1])]])
+  #mean_conc <- mean(pm_conc_pp[[paste0("pm_conc_", SCEN_SHORT_NAME[1])]])
   
-  normalise <- as.numeric(conc_pm[1])/as.numeric(mean_conc)
-  ###Lines which are normalising the concentrations
+  #normalise <- as.numeric(conc_pm[1])/as.numeric(mean_conc)
+  #for (i in 1: length(SCEN_SHORT_NAME))
+  #pm_conc_pp[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]] <- normalise*pm_conc_pp[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]]
   
-  for (i in 1: length(SCEN_SHORT_NAME))
-    ## Rahul made changes here/./-- no normalisation
-    synth_pop[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]] <- synth_pop[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]]
+  pm_conc_pp$participant_id <- as.integer(pm_conc_pp$participant_id)
   
-  #synth_pop[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]] <- normalise*synth_pop[[paste0("pm_conc_", SCEN_SHORT_NAME[i])]]
-  
-  synth_pop$participant_id <- as.integer(synth_pop$participant_id)
-  
-  list(scenario_pm=conc_pm, pm_conc_pp=synth_pop)
+  list(scenario_pm=conc_pm, pm_conc_pp=pm_conc_pp)
   
 }
 
