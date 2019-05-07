@@ -160,9 +160,7 @@ global_path <- paste0(global_path, "/")
 
 ## DATA FILES FOR MODEL  
 DISEASE_INVENTORY <<- read.csv(paste0(global_path,"dose_response/disease_outcomes_lookup.csv"))
-# DR_AP$cause_code matches DISEASE_INVENTORY$ap_acronym
 DR_AP <<- read.csv(paste0(global_path,"dose_response/drap/dose_response.csv"))
-#INJ_DIST_EXP <<- read_csv('code/injuries/data/sin_coefficients_pairs.csv') ## injury distance exponent
 # root of list_of_files matches DISEASE_INVENTORY$pa_acronym
 list_of_files <- list.files(path = paste0(global_path,"dose_response/drpa/extdata/"), recursive = TRUE, pattern = "\\.csv$", full.names = TRUE)
 for (i in 1:length(list_of_files)){
@@ -290,7 +288,7 @@ parameters <- ithimr::ithim_setup_parameters(NSAMPLES=NSAMPLES,
                                                   DISTANCE_SCALAR_CYCLING=DISTANCE_SCALAR_CYCLING,
                                                   DISTANCE_SCALAR_MOTORCYCLE=DISTANCE_SCALAR_MOTORCYCLE)
 
-set_vehicle_inventory() # sets vehicle inventory
+ithimr::set_vehicle_inventory() # sets vehicle inventory
 
 #####################################################################
 ## start metahit
