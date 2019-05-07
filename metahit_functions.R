@@ -309,10 +309,10 @@ health_burden <- function(ind_ap_pa,inj,combined_AP_PA=T){
         pif_scen <- (pif_ref[,2] - pif_temp[,2]) / pif_ref[,2]
         # Calculate ylls 
         yll_dfs <- combine_health_and_pif(pif_values=pif_scen, hc = gbd_ylls_disease)
-        ylls[[yll_name]] <- yll_dfs
+        ylls[[yll_name]] <- yll_dfs[,V1]
         # Calculate deaths 
         death_dfs <- combine_health_and_pif(pif_values=pif_scen,hc=gbd_deaths_disease)
-        deaths[[deaths_name]] <- death_dfs
+        deaths[[deaths_name]] <- death_dfs[,V1]
       }
     }
   }
