@@ -64,7 +64,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_8.Rds'))){
     for(i in 1:2) for(j in 1:2)
       injury_table[[i]][[j]]$road_index <- match(injury_table[[i]][[j]]$road,roads)
     
-    saveRDS(injury_table,paste0(overflow_path,'processed_injuries_7.Rds'))
+    saveRDS(injury_table,paste0(overflow_path,'processed_injuries_7.Rds'),version=2)
   }
   ######################################################################
   
@@ -167,7 +167,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_8.Rds'))){
     for(j in 1:2)
       injury_table[[i]][[j]] <- injury_table[[i]][[j]][,colnames(injury_table[[i]][[j]])%in%keepnames]
   
-  saveRDS(injury_table,paste0(overflow_path,'processed_injuries_8.Rds'))
+  saveRDS(injury_table,paste0(overflow_path,'processed_injuries_8.Rds'),version=2)
 }
 
 ######################################################################
@@ -211,9 +211,9 @@ for(i in 1:2) {
     ##for model build, set rate=1
     injury_table[[i]][[j]]$rate <- 1
     mod[[i]][[j]] <- glm(as.formula(form),offset=-log(rate),family=poisson(link=log),data=injury_table[[i]][[j]])
-    saveRDS(mod[[i]][[j]],paste0(overflow_path,'city_region',i,j,'.Rds'))
-    #saveRDS(mod[[i]][[j]],paste0('/scratch/rob/city_region',i,j,'.Rds'))
-    saveRDS(trim_glm_object(mod[[i]][[j]]),paste0('city_region',i,j,'.Rds'))
+    saveRDS(mod[[i]][[j]],paste0(overflow_path,'city_region',i,j,'.Rds'),version=2)
+    #saveRDS(mod[[i]][[j]],paste0('/scratch/rob/city_region',i,j,'.Rds'),version=2)
+    saveRDS(trim_glm_object(mod[[i]][[j]]),paste0('city_region',i,j,'.Rds'),version=2)
   }
 }
 
@@ -223,7 +223,7 @@ for(i in 1:2)
   for(j in 1:2)
     city_table[[i]][[j]] <- injury_table[[i]][[j]][injury_table[[i]][[j]]$year==2015,]
 
-saveRDS(city_table,paste0(overflow_path,'processed_injuries_9.Rds'))
+saveRDS(city_table,paste0(overflow_path,'processed_injuries_9.Rds'),version=2)
 
 
 
