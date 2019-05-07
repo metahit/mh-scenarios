@@ -540,7 +540,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_6_tabulated_injuries.Rds
   
   logmod <- glm(I(nas/total)~cas_severity+cas_mode+strike_mode+road,weights=total,data=subset(count_nas,total>0),family=binomial)
   count_nas$rate <- 1-predict(logmod,newdata=mutate(count_nas,total=1),type='response')
-  saveRDS(count_nas,paste0(overflow_path,'processed_injuries_5_NA_table_for_reporting_rate.Rds'))
+  saveRDS(count_nas,paste0(overflow_path,'processed_injuries_5_NA_table_for_reporting_rate.Rds'),version=2)
   
   
   ## assign age groups
@@ -600,7 +600,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_6_tabulated_injuries.Rds
     for(j in 1:2) 
       injury_table[[i]][[j]] <- subset(injury_table[[i]][[j]],!(road=='motorway'&(strike_mode%in%c('cyclist','pedestrian')|cas_mode%in%c('cyclist','pedestrian'))))
   
-  saveRDS(injury_table,paste0(overflow_path,'processed_injuries_6_tabulated_injuries.Rds'))
+  saveRDS(injury_table,paste0(overflow_path,'processed_injuries_6_tabulated_injuries.Rds'),version=2)
 }
 ######################################################################
 
