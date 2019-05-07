@@ -192,5 +192,5 @@ sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk -
 sp_ind$scen_mmetwk <- ((met_cycle - 1) *  sp_ind$scen_cycle_wkhr) + ((met_walk - 1) * sp_ind$scen_walk_wkhr) + sp_ind$sport_wkmmets
 
 # Save dataset
-saveRDS(sp_ind, file.path("2_OutputData", paste0("SPind_", lad14cd, ".Rds")))
+saveRDS(sp_ind, file.path("2_OutputData", paste0("SPind_", lad14cd, ".Rds")),version=2)
 
