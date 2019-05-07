@@ -15,9 +15,9 @@ distspeed <- read.csv("1_InputData/2_OtherInput/NTS_distance_speed.csv")
 # Scenario target % cycle
 targetpcycle <- 0.15
 
-# MET values
-met_cycle <- 5.63
-met_walk <- 3.53
+# # MET values [removed as met values will be random varialbes]
+# met_cycle <- 5.63
+# met_walk <- 3.53
 
 
 ## STEP 1: IDENTIFY NEW CYCLISTS
@@ -187,9 +187,9 @@ sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_traintime_hr', 'scen_train_wkhr'
 sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxitime_hr', 'base_taxi_wkhr')
 sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxitime_hr', 'scen_taxi_wkhr')
 
-# Marginal METs per week, individual
-sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk - 1) * sp_ind$base_walk_wkhr) + sp_ind$sport_wkmmets
-sp_ind$scen_mmetwk <- ((met_cycle - 1) *  sp_ind$scen_cycle_wkhr) + ((met_walk - 1) * sp_ind$scen_walk_wkhr) + sp_ind$sport_wkmmets
+# Marginal METs per week, individual [not created her as met_cycle/walk random variables]
+#sp_ind$base_mmetwk <- ((met_cycle - 1) *  sp_ind$base_cycle_wkhr) + ((met_walk - 1) * sp_ind$base_walk_wkhr) + sp_ind$sport_wkmmets
+#sp_ind$scen_mmetwk <- ((met_cycle - 1) *  sp_ind$scen_cycle_wkhr) + ((met_walk - 1) * sp_ind$scen_walk_wkhr) + sp_ind$sport_wkmmets
 
 # Save dataset
 saveRDS(sp_ind, file.path("2_OutputData", paste0("SPind_", lad14cd, ".Rds")),version=2)
