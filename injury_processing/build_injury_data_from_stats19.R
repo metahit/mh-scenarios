@@ -121,7 +121,7 @@ if(file.exists(paste0(overflow_path,"processed_injuries_1.Rds"))){
   stopped <- subset(avc,local_authority_.district.<=699)
   stopped <- subset(stopped,local_authority_.highway.%in%unlist(codes_for_stats19))
   # accidents_vehicles_casualties_05-15.rds
-  saveRDS(stopped,file=paste0(overflow_path,"processed_injuries_1.Rds"))
+  saveRDS(stopped,file=paste0(overflow_path,"processed_injuries_1.Rds"),version=2)
   
   
   
@@ -238,7 +238,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_2.Rds'))){
   #remove loop components & collect
   rm(stopped.gr, by_stopped)
   # stopped_with_ped_strike.Rds
-  saveRDS(stopped, paste0(overflow_path,'processed_injuries_2.Rds'))   #save for testing
+  saveRDS(stopped, paste0(overflow_path,'processed_injuries_2.Rds'),version=2)   #save for testing
 }
 
 ######################################################################
@@ -397,9 +397,9 @@ if(file.exists(paste0(overflow_path,'processed_injuries_3.Rds'))){
           'cas_male','cas_age', 'strike_mode', 'strike_mode.int', 'strike_male', 'strike_age','veh_reference',"local_authority_.highway.") 
   stopped <- stopped[, cols]
   stopped$region <- sapply(stopped$local_authority_.highway.,function(x)names(codes_for_stats19)[sapply(codes_for_stats19,function(y)x%in%y)])
-  saveRDS(stopped, paste0(overflow_path,'processed_injuries_3.Rds'))  # input for ITHIM conversion
+  saveRDS(stopped, paste0(overflow_path,'processed_injuries_3.Rds'),version=2)  # input for ITHIM conversion
   
-  saveRDS(stopped,paste0(overflow_path,"stats19_29.Rds"))
+  saveRDS(stopped,paste0(overflow_path,"stats19_29.Rds"),version=2)
 }
 
 ######################################################################
@@ -523,7 +523,7 @@ if(file.exists(paste0(overflow_path,'processed_injuries_6_tabulated_injuries.Rds
   injury_long$secondary$whw <- subset(injury_long$secondary$whw,!is.na(strike_male)&!is.na(strike_age))
   
   ## store removed entries and reuse for reporting rates
-  saveRDS(list(cas_na,strike_na),paste0(overflow_path,'processed_injuries_4_removed_NAs.Rds'))
+  saveRDS(list(cas_na,strike_na),paste0(overflow_path,'processed_injuries_4_removed_NAs.Rds'),version=2)
   
   ## tabulate na
   count_nas <- group_by(rbind(do.call(rbind,cas_na),do.call(rbind,strike_na)),cas_severity,cas_mode,strike_mode,road) %>% 
