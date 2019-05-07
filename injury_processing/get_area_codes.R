@@ -54,6 +54,6 @@ lookup_table$stats19_code[lookup_table$region=='nottingham'&lookup_table$la!='No
 
 
 codes_for_stats19 <- lapply(city_regions,function(x)unique(subset(lookup_table,la%in%x)$stats19_code))
-saveRDS(codes_for_stats19,paste0(overflow_path,'codes_for_stats19.Rds'))
-saveRDS(lookup_table,paste0(overflow_path,'lookup_table.Rds'))
+saveRDS(codes_for_stats19,paste0(overflow_path,'codes_for_stats19.Rds'),version=2)
+saveRDS(lookup_table,paste0(overflow_path,'lookup_table.Rds'),version=2)
 
