@@ -204,6 +204,15 @@ trim_glm_object <- function(obj){
   obj
 }
 
+test_model <- F
+if(test_model){
+  form <- 'count~region+offset(log(cas_distance)+log(strike_distance))'
+  mod <- glm(as.formula(form),offset=-log(rate),family=poisson(link=log),data=injury_table[[2]][[2]])
+  mod1 <- trim_glm_object(mod)
+  predict(mod1)
+}
+
+
 #formula_one <- 'count~ns(year,df=2)+cas_severity+cas_mode+strike_mode+road+region+offset(log(cas_distance)+log(strike_distance))'
 formula_one <- 'count~year+cas_severity+region+offset(log(cas_distance)+log(strike_distance))'
 
@@ -219,10 +228,19 @@ for(i in 1:2) {
     print(form)
     ##for model build, set rate=1
     injury_table[[i]][[j]]$rate <- 1
-    mod[[i]][[j]] <- glm(as.formula(form),offset=-log(rate),family=poisson(link=log),data=injury_table[[i]][[j]])
-    saveRDS(mod[[i]][[j]],paste0(overflow_path,'very_large/city_region',i,j,'.Rds'),version=2)
+    mod[[i]][[j]] <- glm(as.formula(form),family=poisson(link=log),data=injury_table[[i]][[j]])
     #saveRDS(mod[[i]][[j]],paste0('/scratch/rob/city_region',i,j,'.Rds'),version=2)
-    saveRDS(trim_glm_object(mod[[i]][[j]]),paste0(overflow_path,'city_region',i,j,'.Rds'),version=2)
+    trimmed_mod <- trim_glm_object(mod[[i]][[j]])
+    print(sapply(mod[[i]][[j]],function(x)length(serialize(x, NULL))))
+    print(1)
+    predict(trimmed_mod,newdata=injury_table[[i]][[j]],type='response')
+    trimmed_mod$offset <- c()
+    print(2)
+    predict(trimmed_mod,newdata=injury_table[[i]][[j]],type='response')
+    trimmed_mod$linear.predictors <- c()
+    print(3)
+    predict(trimmed_mod,newdata=injury_table[[i]][[j]],type='response')
+    saveRDS(trimmed_mod,paste0('city_region',i,j,'.Rds'),version=2)
   }
 }
 
