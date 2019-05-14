@@ -1,7 +1,7 @@
 rm(list=ls())
 library(ithimr)
 library(splines)
-setwd('~/overflow_dropbox/mh-scenarios/')
+#setwd('~/overflow_dropbox/mh-scenarios/')
 ## overwrite some functions for METAHIT's pp_summary use (instead of TIGTHAT's tripset use)
 ## in general, the overwriting functions are from ithimr's uncertain_travel branch
 ## in general, ithimr functions are written ithimr::function()
