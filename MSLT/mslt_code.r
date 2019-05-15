@@ -23,14 +23,14 @@ rm (list = ls())
 options(scipen=999)
 
 # ---- chunk-3 ----
-source("code/functions.R")
+source("MSLT/code/functions.R")
 
 # ---- chunk-4 ----
 
 # ------------------- Dismod input data set ---------------------------#
 
 
-gbd <- readxl::read_excel("data/england/gbd2016.xlsx")
+gbd <- readxl::read_excel("MSLT/data/england/gbd2016.xlsx") # HERE HAVE DATA READY FROM DATA PREPARATION FOR REGIONS
 
 disease_short_names <- data.frame(disease = c("All causes", 
                                               "Diabetes mellitus",
