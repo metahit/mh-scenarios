@@ -1,4 +1,4 @@
-#####Packages
+# ---- Packages for functions ----
 
 require(dplyr)
 require(tidyverse)
@@ -6,29 +6,113 @@ require(knitr)
 require(kableExtra)
 require(citr)
 
-#############################Explanation method###################################
+# ---- Explanation method ---- 
 
-#####Briefly, the proportional multi-state multi cohort life table consists of a 
-#####general life table and a life table for each of the modelled diseases.
-#####The diseases are those associated to the studied risk factor/s. 
-#####The link between the general life table and disease life tables is via the 
-#####potential impact fraction (pif), also called paf (population attributable fraction)
-#####The pif combines exposure to the risk factor and relative risks. The pif is 
-#####appleid to modify incidence in the individual disease life tables, which in turn
-#####modify prevalence and mortality. Changes in mortality and prevalence rates
-#####feed bacak into the general life table to modify total mortality and disability. 
-####Changes in total mortality impact on life years and changes in disability impact 
-####the disability adjusment of life years. 
+# Briefly, the proportional multi-state multi cohort life table consists of a 
+# general life table and a life table for each of the modelled diseases.
+# The diseases are those associated to the studied risk factor/s. 
+# The link between the general life table and disease life tables is via the 
+# potential impact fraction (pif), also called paf (population attributable fraction)
+# The pif combines exposure to the risk factor and relative risks. The pif is 
+# appleid to modify incidence in the individual disease life tables, which in turn
+# modify prevalence and mortality. Changes in mortality and prevalence rates
+# feed bacak into the general life table to modify total mortality and disability. 
+# Changes in total mortality impact on life years and changes in disability impact 
+# the disability adjusment of life years. 
 
-#### Method reference: 1.	Barendregt JJ, Oortmarssen vGJ, Murray CJ, Vos T. A generic model for the assessment of disease epidemiology: the computational basis of DisMod II. Popul Health Metr. 2003;1(1):4-.
+# Method reference: 1.	Barendregt JJ, Oortmarssen vGJ, Murray CJ, Vos T. A generic model for the assessment of disease epidemiology: the computational basis of DisMod II. Popul Health Metr. 2003;1(1):4-.
+
+# ---- Functions ----
+
+# run_life_table, run_disease, run_pif (temp), run_output 
+
+# ---- sort_gbd_input ----
+
+sort_gbd_input <- function(in_data, in_year, in_locality) {
+  data <- in_data[which(in_data$year== in_year & in_data$location == in_locality),]
+}
+
+# --- run_loc_df ---- MAY DELETE
+
+i_data = gbd_data_localities[[1]]
+run_loc_df <- function(i_data) {
+
+gbd_df <- NULL 
+
+for (ag in 1:length(unique(i_data$age))){
+  for (gender in c("Male", "Female")){
+    age_sex_df <- NULL
+    for (dm in 1:length(disease_measures)){
+      for (d in 1:nrow(disease_short_names)){
+        dn <- disease_short_names$disease[d]
+        dmeasure <- disease_measures[dm] %>% as.character()
+        # gender <- "Male"
+        agroup <- unique(i_data$age)[ag]
+        
+        idf <- filter(i_data, sex == gender & age == agroup & measure == dmeasure & cause == dn)
+        
+        if (nrow(idf) > 0){
+          
+          population_numbers <- filter(idf, metric == "Number") %>% select("val")
+          
+          idf_rate <- filter(idf, metric == "Rate") %>% select("val")
+          
+          idf$population_number <- (100000 * population_numbers$val) / idf_rate$val
+          
+          idf$rate_per_1 <- round(idf_rate$val / 100000, 6)
+          
+          idf[[tolower(paste(dmeasure, "rate", disease_short_names$sname[d], sep = "_"))]] <- idf$rate_per_1
+          
+          idf[[tolower(paste(dmeasure, "number", disease_short_names$sname[d], sep = "_"))]] <- population_numbers$val
+          
+          idf$rate_per_1 <- NULL
+          
+          idf <- filter(idf, metric == "Number")
+          
+          if (is.null(age_sex_df)){
+            #browser()
+            # print("if")
+            # print(names(idf)[ncol(idf) - 1])
+            # print(names(idf)[ncol(idf)])
+            age_sex_df <- select(idf, age, sex, population_number, location, names(idf)[ncol(idf) - 1] , names(idf)[ncol(idf)])
+          }
+          else{
+            #browser()
+            # print("else")
+            # print(names(idf)[ncol(idf) - 1])
+            # print(names(idf)[ncol(idf)])
+            
+            age_sex_df <- cbind(age_sex_df, select(idf, names(idf)[ncol(idf) - 1] , names(idf)[ncol(idf)]))
+          }
+          
+        }
+        
+        #age_range <- years %>% str_match_all("[0-9]+") %>% unlist %>% as.numeric
+        
+      }
+    }
+    
+    # browser()
+    
+    if (is.null(gbd_df)){
+      # browser()
+      gbd_df <- age_sex_df
+    }
+    else{
+      # browser()
+      age_sex_df[setdiff(names(gbd_df), names(age_sex_df))] <- 0
+      gbd_df[setdiff(names(age_sex_df), names(gbd_df))] <- 0
+      gbd_df <- rbind(gbd_df, age_sex_df)
+      
+      index <- index + 1
+      }
+    }
+  }
+}
 
 
-####The functions: run_life_table, run_disease, and run_pif serve to generate outputs
-####per age and sex (see model.R). The function run_output to facilitate the generation
-####of results. 
+# ---- run_life_table ----
 
-
-#############################Function for general life table###################################
 #####Function to generate age and sex life tables. The function is then use in the model.R script
 #####to calculate variables for the baseline and scenario life tables. 
 
@@ -92,7 +176,8 @@ run_life_table <- function(in_idata, in_sex, in_mid_age)
 }
 
 
-#############################Function for disease life tables###################################
+
+# ---- run_disease ----(ADD REMISSION FOR CANCERS?)
 
 run_disease <- function(in_idata, in_mid_age, in_sex, in_disease) 
   
@@ -208,9 +293,9 @@ run_disease <- function(in_idata, in_mid_age, in_sex, in_disease)
 }
 
 
-#######################################Function for PIFs########################################
+# run_pif (temp) ----
 
-##### the code for PIFs will depend on the data sources. 
+# The code for PIFs will depend on the data sources. 
 
 
 run_pif <- function(in_idata, i_irr, i_exposure, in_mid_age, in_sex, in_disease, in_met_sc) 
@@ -317,9 +402,9 @@ run_pif <- function(in_idata, i_irr, i_exposure, in_mid_age, in_sex, in_disease,
 }
 
 
-################################################Function for output#############################################
+# ---- plot_output ----
 
-##### function to generate graphs by age and sex, per ooutcome of interest. 
+# Function to generate graphs by age and sex, per outcome of interest. 
 
 
 plot_output <- function(in_data, in_age, in_population, in_outcomes, in_legend = "", in_disease = ""){
@@ -373,7 +458,8 @@ plot_output <- function(in_data, in_age, in_population, in_outcomes, in_legend =
 }
 
 
-###Function to generate aggregated outcome for all age groups and gender
+# ---- gen_aggregate ----
+# Function to aggreate outcomes by age an sex
 
 
 gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes){
@@ -420,8 +506,9 @@ gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes){
   aggr
 }
 
+# ---- grid_arrange_shared_legend ----
+# Function to general combined labels for multiple plots in a page
 
-#####################################Function to generate combined labels for multiple plots in a page####
 grid_arrange_shared_legend <- function(..., ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), mainTitle = "", mainLeft = "", mainBottom = "") {
   
   plots <- list(...)
@@ -460,8 +547,8 @@ g_legend <- function(a.gplot){
   return(legend)
 }
 
-
-########################################Function to get qualified names diseases##########
+# ---- get_qualified_disease_name
+# Function to get qualified names diseases
 
 get_qualified_disease_name <- function (disease){
   if (disease == 'ihd')
@@ -476,9 +563,8 @@ get_qualified_disease_name <- function (disease){
     return ('Ischemic stroke')
 }
 
-
-#######################################Function to generate GBD graphs to compare data national to local (USED in GBD COMPARE############################
-
+# ---- plot_GBD (may need to update) ----
+# Function to generate GBD graphs to compare data national to local (USED in GBD COMPARE############################
 
 plot_GBD <- function(in_data1, in_data2, in_sex, in_cause, in_measure) {
   
@@ -503,9 +589,5 @@ plot_GBD <- function(in_data1, in_data2, in_sex, in_cause, in_measure) {
   print(p)
 }
 
-################################Function to generate data sets by year and localities (and combine back to regions?)#########
 
-sort_gbd_input <- function(in_data, in_year, in_locality) {
-  data <- in_data[which(in_data$year== in_year & in_data$location == in_locality),]
-}
 

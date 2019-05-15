@@ -1,4 +1,4 @@
-setwd("code/MSLT")
+setwd("hm-scenarios/MSLT")
 # Change to own wd
 
 # ---- chunk-intro ----
@@ -30,26 +30,38 @@ source("MSLT/code/functions.R")
 # ------------------- Dismod input data set ---------------------------#
 
 
-gbd <- readxl::read_excel("MSLT/data/england/gbd2016.xlsx") # HERE HAVE DATA READY FROM DATA PREPARATION FOR REGIONS
+# gbd <- readxl::read_excel("MSLT/data/england/gbd2016.xlsx") # HERE HAVE DATA READY FROM DATA PREPARATION FOR REGIONS (OLD, delete)
+# 
+# disease_short_names <- data.frame(disease = c("All causes", 
+#                                               "Diabetes mellitus",
+#                                               "Tracheal, bronchus, and lung cancer",
+#                                               "Breast cancer", 
+#                                               "Colon and rectum cancer",
+#                                               "Ischemic heart disease",
+#                                               "Ischemic stroke"),
+#                                   sname = c("ac", "dm", "tblc", "bc",
+#                                             "cc", "ihd", "is"))
+# 
+# disease_short_names$disease <- as.character(disease_short_names$disease)
+# disease_short_names$sname <- as.character(disease_short_names$sname)
 
-disease_short_names <- data.frame(disease = c("All causes", 
-                                              "Diabetes mellitus",
-                                              "Tracheal, bronchus, and lung cancer",
-                                              "Breast cancer", 
-                                              "Colon and rectum cancer",
-                                              "Ischemic heart disease",
-                                              "Ischemic stroke"),
-                                  sname = c("ac", "dm", "tblc", "bc",
-                                            "cc", "ihd", "is"))
-
-disease_short_names$disease <- as.character(disease_short_names$disease)
-disease_short_names$sname <- as.character(disease_short_names$sname)
+### May move to data prep script
 
 disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived with Disability)")
 
-gbd_df <- NULL
 
-for (ag in 1:length(unique(gbd$age))){
+#### MOVED TO FUNCTIONS, NEED TO DO FOR MULTIPLE LOCALITIES AND THEN BCK TO REGION
+
+
+test <- run_loc_df(gbd_data_localities[[1]])
+
+gbd_df_loc_list <- list()
+
+index <- 1
+
+gbd_df <- NULL #may be sth here that has to be in teh list
+
+for (ag in 1:length(unique(gbd_data_localities[[index]]$age))){
   for (gender in c("Male", "Female")){
     age_sex_df <- NULL
     for (dm in 1:length(disease_measures)){
@@ -57,9 +69,9 @@ for (ag in 1:length(unique(gbd$age))){
         dn <- disease_short_names$disease[d]
         dmeasure <- disease_measures[dm] %>% as.character()
         # gender <- "Male"
-        agroup <- unique(gbd$age)[ag]
+        agroup <- unique(gbd_data_localities[[index]]$age)[ag]
         
-        idf <- filter(gbd, sex == gender & age == agroup & measure == dmeasure & cause == dn)
+        idf <- filter(gbd_data_localities[[index]], sex == gender & age == agroup & measure == dmeasure & cause == dn)
         
         if (nrow(idf) > 0){
           
@@ -113,9 +125,10 @@ for (ag in 1:length(unique(gbd$age))){
       age_sex_df[setdiff(names(gbd_df), names(age_sex_df))] <- 0
       gbd_df[setdiff(names(age_sex_df), names(gbd_df))] <- 0
       gbd_df <- rbind(gbd_df, age_sex_df)
+      
+      index <- index + 1
     }
   }
-  
 }
 
 # ------------------- Add age-groups --------------------# 
