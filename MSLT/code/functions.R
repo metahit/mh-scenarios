@@ -32,9 +32,11 @@ sort_gbd_input <- function(in_data, in_year, in_locality) {
   data <- in_data[which(in_data$year== in_year & in_data$location == in_locality),]
 }
 
-# --- run_loc_df ---- MAY DELETE
+# --- run_loc_df ---- MAY DELETE, LOOP through list rather than function, in i_data, do we need a for loop to go through data elements?
 
-i_data = gbd_data_localities[[1]]
+tmp <- run_loc_df(gbd_data_localities[[1]])
+tmp2 <- lapply(gbd_data_localities, run_loc_df)
+
 run_loc_df <- function(i_data) {
 
 gbd_df <- NULL 
@@ -104,10 +106,11 @@ for (ag in 1:length(unique(i_data$age))){
       gbd_df[setdiff(names(age_sex_df), names(gbd_df))] <- 0
       gbd_df <- rbind(gbd_df, age_sex_df)
       
-      index <- index + 1
+
       }
     }
-  }
+}
+return(gbd_df)
 }
 
 

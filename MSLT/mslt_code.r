@@ -52,8 +52,12 @@ disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived
 
 #### MOVED TO FUNCTIONS, NEED TO DO FOR MULTIPLE LOCALITIES AND THEN BCK TO REGION
 
+### To here, cannot make this work. 
 
 test <- run_loc_df(gbd_data_localities[[1]])
+
+
+
 
 gbd_df_loc_list <- list()
 
