@@ -34,8 +34,7 @@ sort_gbd_input <- function(in_data, in_year, in_locality) {
 
 # --- run_loc_df ---- MAY DELETE, LOOP through list rather than function, in i_data, do we need a for loop to go through data elements?
 
-tmp <- run_loc_df(gbd_data_localities[[1]])
-tmp2 <- lapply(gbd_data_localities, run_loc_df)
+
 
 run_loc_df <- function(i_data) {
 
@@ -62,12 +61,12 @@ for (ag in 1:length(unique(i_data$age))){
           idf$population_number <- (100000 * population_numbers$val) / idf_rate$val
           
           idf$rate_per_1 <- round(idf_rate$val / 100000, 6)
-          
+
           idf[[tolower(paste(dmeasure, "rate", disease_short_names$sname[d], sep = "_"))]] <- idf$rate_per_1
-          
+
           idf[[tolower(paste(dmeasure, "number", disease_short_names$sname[d], sep = "_"))]] <- population_numbers$val
           
-          idf$rate_per_1 <- NULL
+          #idf$rate_per_1 <- NULL
           
           idf <- filter(idf, metric == "Number")
           

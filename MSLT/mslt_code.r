@@ -27,113 +27,12 @@ source("MSLT/code/functions.R")
 
 # ---- chunk-4 ----
 
+# Use source to calculate data from data prep, save in data file for city region of interest
+
 # ------------------- Dismod input data set ---------------------------#
 
 
-# gbd <- readxl::read_excel("MSLT/data/england/gbd2016.xlsx") # HERE HAVE DATA READY FROM DATA PREPARATION FOR REGIONS (OLD, delete)
-# 
-# disease_short_names <- data.frame(disease = c("All causes", 
-#                                               "Diabetes mellitus",
-#                                               "Tracheal, bronchus, and lung cancer",
-#                                               "Breast cancer", 
-#                                               "Colon and rectum cancer",
-#                                               "Ischemic heart disease",
-#                                               "Ischemic stroke"),
-#                                   sname = c("ac", "dm", "tblc", "bc",
-#                                             "cc", "ihd", "is"))
-# 
-# disease_short_names$disease <- as.character(disease_short_names$disease)
-# disease_short_names$sname <- as.character(disease_short_names$sname)
 
-### May move to data prep script
-
-disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived with Disability)")
-
-
-#### MOVED TO FUNCTIONS, NEED TO DO FOR MULTIPLE LOCALITIES AND THEN BCK TO REGION
-
-### To here, cannot make this work. 
-
-test <- run_loc_df(gbd_data_localities[[1]])
-
-
-
-
-gbd_df_loc_list <- list()
-
-index <- 1
-
-gbd_df <- NULL #may be sth here that has to be in teh list
-
-for (ag in 1:length(unique(gbd_data_localities[[index]]$age))){
-  for (gender in c("Male", "Female")){
-    age_sex_df <- NULL
-    for (dm in 1:length(disease_measures)){
-      for (d in 1:nrow(disease_short_names)){
-        dn <- disease_short_names$disease[d]
-        dmeasure <- disease_measures[dm] %>% as.character()
-        # gender <- "Male"
-        agroup <- unique(gbd_data_localities[[index]]$age)[ag]
-        
-        idf <- filter(gbd_data_localities[[index]], sex == gender & age == agroup & measure == dmeasure & cause == dn)
-        
-        if (nrow(idf) > 0){
-          
-          population_numbers <- filter(idf, metric == "Number") %>% select("val")
-          
-          idf_rate <- filter(idf, metric == "Rate") %>% select("val")
-          
-          idf$population_number <- (100000 * population_numbers$val) / idf_rate$val
-          
-          idf$rate_per_1 <- round(idf_rate$val / 100000, 6)
-          
-          idf[[tolower(paste(dmeasure, "rate", disease_short_names$sname[d], sep = "_"))]] <- idf$rate_per_1
-          
-          idf[[tolower(paste(dmeasure, "number", disease_short_names$sname[d], sep = "_"))]] <- population_numbers$val
-          
-          idf$rate_per_1 <- NULL
-          
-          idf <- filter(idf, metric == "Number")
-          
-          if (is.null(age_sex_df)){
-            #browser()
-            # print("if")
-            # print(names(idf)[ncol(idf) - 1])
-            # print(names(idf)[ncol(idf)])
-            age_sex_df <- select(idf, age, sex, population_number, location, names(idf)[ncol(idf) - 1] , names(idf)[ncol(idf)])
-          }
-          else{
-            #browser()
-            # print("else")
-            # print(names(idf)[ncol(idf) - 1])
-            # print(names(idf)[ncol(idf)])
-            
-            age_sex_df <- cbind(age_sex_df, select(idf, names(idf)[ncol(idf) - 1] , names(idf)[ncol(idf)]))
-          }
-          
-        }
-        
-        #age_range <- years %>% str_match_all("[0-9]+") %>% unlist %>% as.numeric
-        
-      }
-    }
-    
-    # browser()
-    
-    if (is.null(gbd_df)){
-      # browser()
-      gbd_df <- age_sex_df
-    }
-    else{
-      # browser()
-      age_sex_df[setdiff(names(gbd_df), names(age_sex_df))] <- 0
-      gbd_df[setdiff(names(age_sex_df), names(gbd_df))] <- 0
-      gbd_df <- rbind(gbd_df, age_sex_df)
-      
-      index <- index + 1
-    }
-  }
-}
 
 # ------------------- Add age-groups --------------------# 
 
