@@ -113,6 +113,14 @@ test_data_sum <- as.data.frame(select(gbd_loc_data_processed))
 
 #### Try to use gen_aggregate
 
+text2 <- bind_rows(gbd_loc_data_processed, .id = 'number') 
+
+
+
+%>% group_by(grp, date) %>% summarise(Mean = mean(Value))
+
+
+
 gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes)
 
 aggregate_frame_males <- list()
