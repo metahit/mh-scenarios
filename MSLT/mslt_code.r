@@ -1,4 +1,5 @@
 setwd("hm-scenarios/MSLT")
+getwd()
 # Change to own wd
 
 # ---- chunk-intro ----
@@ -23,7 +24,7 @@ rm (list = ls())
 options(scipen=999)
 
 # ---- chunk-3 ----
-source("MSLT/code/functions.R")
+source("code/functions.R")
 
 # ---- chunk-4 ----
 

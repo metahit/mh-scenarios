@@ -32,14 +32,14 @@
 # Get data ready for processing in mslt_code.r line 33 (need to do per locality and then add up to region, can add number 
 # but  not rates, so population calculations need to be at localities level)
 
-gbd_input <- read.csv(file="MSLT/data/city regions/bristol/gbd_data_bristol.csv")
+gbd_input <- read.csv(file="data/city regions/bristol/gbd_data_bristol.csv")
 
 gbd_input$location <- as.character(gbd_input$location) # to match with localities characters vector. 
 
 localities <- c('Bristol, City of', 'Bath and North East Somerset', 'North Somerset', 'South Gloucestershire')
 
 year <- 2017 
- 
+
 ### Loop to create a raw data set for 2017 for each of the localities to calculate population numbers
 
 gbd_data_localities_raw <- list()
@@ -53,7 +53,7 @@ for (l in localities){
     index <- index + 1
   }
 }
- 
+
 View(gbd_data_localities_raw[[1]]) 
 
 ### Calculate population numbers per locality in baseline year (2017), we need this to derive city region population
@@ -106,43 +106,32 @@ gbd_loc_data_processed <- lapply(gbd_data_localities_raw, run_loc_df)
 
 ## add up number and then calculate rates from numbers and population numbers. 
 
+gbd_Bristol_all_loc <- bind_rows(gbd_loc_data_processed, .id = 'number')
 
-gbd_Bristol_proc <- plyr::ldply(gbd_loc_data_processed, rbind)
+### Delete columns with rates (we will recalculate them at the city region level)
 
-test_data_sum <- as.data.frame(select(gbd_loc_data_processed))
+gbd_Bristol_all_loc <-  select(gbd_Bristol_all_loc,-contains("rate"))
 
-#### Try to use gen_aggregate
+### Crearte dataframe with added values (may delete this one, not necessary as goup by can create new dataframe)
 
-text2 <- bind_rows(gbd_loc_data_processed, .id = 'number') 
+gbd_Bristol <- select(gbd_loc_data_processed[[1]], "age", "sex")
+
+gbd_Bristol_all_loc$age <- as.character(gbd_Bristol_all_loc$age)
+gbd_Bristol_all_loc$sex <- as.character(gbd_Bristol_all_loc$sex)
+gbd_Bristol_all_loc$sex_age_cat <- paste(gbd_Bristol_all_loc$sex, gbd_Bristol_all_loc$age, sep = "_")
+gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex,location, number)) # check where number is coming from
+
+
+### This data set has population and numbers data for all cause and diseases prevalence, incidence and mortlaity for
+### the the Bristol city Region. CHECK DATA INPUTS IN MLST_CODE TO GET DATA READY
+gbd_Bristol <- gbd_Bristol_all_loc %>%
+  group_by(sex_age_cat) %>%
+  summarise_all(funs(sum))
 
 
 
-%>% group_by(grp, date) %>% summarise(Mean = mean(Value))
 
 
-
-gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes)
-
-aggregate_frame_males <- list()
-aggregate_frame_females <- list()
-
-index <- 1
-
-for (outcome in i_outcome) {
-  for (disease in i_disease) {
-    
-    aggregate_frame_males[[index]] <- gen_aggregate(in_data = output_df, in_cohorts = 16, in_population = "male", in_outcomes = c(paste(outcome, "num", "bl", disease, sep = "_"), paste(outcome, "num", "sc", disease, sep = "_"), paste(outcome, "num", "diff", disease, sep = "_")))
-    
-    aggregate_frame_females[[index]] <- gen_aggregate(in_data = output_df, in_cohorts = 16, in_population = "female", in_outcomes = c(paste(outcome, "num", "bl", disease, sep = "_"), paste(outcome, "num", "sc", disease, sep = "_"), paste(outcome, "num", "diff", disease, sep = "_")))
-    
-    # Remove non-numeric columns starting with age and sex
-    aggregate_frame_males[[index]] <- aggregate_frame_males[[index]] %>% select(-starts_with("age"), -starts_with("sex"))
-    
-    aggregate_frame_females[[index]] <- aggregate_frame_females[[index]] %>% select(-starts_with("age"), -starts_with("sex"))
-    
-    index <- index + 1
-  }
-}
 
 
 # Trends data (2007 to 2017)
