@@ -32,7 +32,7 @@
 # Get data ready for processing in mslt_code.r line 33 (need to do per locality and then add up to region, can add number 
 # but  not rates, so population calculations need to be at localities level)
 
-gbd_input <- read.csv(file="data/city regions/bristol/gbd_data_bristol.csv")
+gbd_input <- read.csv(file="MSLT/data/city regions/bristol/gbd_data_bristol.csv")
 
 gbd_input$location <- as.character(gbd_input$location) # to match with localities characters vector. 
 
@@ -90,6 +90,7 @@ disease_short_names <- data.frame(disease = c("All causes",
 
 disease_short_names$disease <- as.character(disease_short_names$disease)
 disease_short_names$sname <- as.character(disease_short_names$sname)
+disease_short_names
 
 levels(gbd_input$measure) # check measures for below data frame
 
@@ -99,8 +100,10 @@ disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived
 
 gbd_loc_data_processed <- lapply(gbd_data_localities_raw, run_loc_df)
 
+## remove incidence and prevalence all cause (ideally this should be part of the above, using if)
 
-# View(gbd_loc_data_processed[[1]])
+
+View(gbd_loc_data_processed[[1]])
 
 #### Add up all localities in a data frame for Bristol City Region: population, causes-measures rates and numbers. 
 
@@ -114,24 +117,34 @@ gbd_Bristol_all_loc <-  select(gbd_Bristol_all_loc,-contains("rate"))
 
 ### Crearte dataframe with added values (may delete this one, not necessary as goup by can create new dataframe)
 
-gbd_Bristol <- select(gbd_loc_data_processed[[1]], "age", "sex")
-
 gbd_Bristol_all_loc$age <- as.character(gbd_Bristol_all_loc$age)
 gbd_Bristol_all_loc$sex <- as.character(gbd_Bristol_all_loc$sex)
 gbd_Bristol_all_loc$sex_age_cat <- paste(gbd_Bristol_all_loc$sex, gbd_Bristol_all_loc$age, sep = "_")
-gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex,location, number)) # check where number is coming from
+gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex, location, number, prevalence_number_ac, incidence_number_ac))
 
+## Check dataset values in excel
+
+write_csv(gbd_Bristol_all_loc, "MSLT/data/city regions/bristol/test/all_localities.csv")
 
 ### This data set has population and numbers data for all cause and diseases prevalence, incidence and mortlaity for
-### the the Bristol city Region. CHECK DATA INPUTS IN MLST_CODE TO GET DATA READY
+### the the Bristol city Region. THIS IS NOT WORKING, NOT ADDING OBSERVATIONS. USE AGGREGATE?
+
 gbd_Bristol <- gbd_Bristol_all_loc %>%
   group_by(sex_age_cat) %>%
   summarise_all(funs(sum))
 
 
 
+### Create two new columns for age and seX
+
+gbd_Bristol_2017 <- gbd_Bristol %>%
+  separate(sex_age_cat, c("sex", "age"), "_")
 
 
+View(gbd_Bristol_2017)
+View(gbd_Bristol_2017[,"ylds (years lived with disability)_number_lc"])
+View(gbd_Bristol_2017[,"prevalence_number_lc"])
 
+write_csv(gbd_Bristol_2017, "MSLT/data/city regions/bristol/test/gbd_Bristol_2017.csv")
 
 # Trends data (2007 to 2017)

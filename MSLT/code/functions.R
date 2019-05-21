@@ -48,6 +48,7 @@ for (ag in 1:length(unique(i_data$age))){
         dn <- disease_short_names$disease[d]
         dmeasure <- disease_measures[dm] %>% as.character()
         # gender <- "Male"
+        
         agroup <- unique(i_data$age)[ag]
         
         idf <- filter(i_data, sex == gender & age == agroup & measure == dmeasure & cause == dn)

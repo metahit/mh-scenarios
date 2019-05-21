@@ -24,7 +24,7 @@ rm (list = ls())
 options(scipen=999)
 
 # ---- chunk-3 ----
-source("code/functions.R")
+source("MSLT/code/functions.R")
 
 # ---- chunk-4 ----
 
@@ -32,7 +32,7 @@ source("code/functions.R")
 
 # ------------------- Dismod input data set ---------------------------#
 
-
+gbd_df <- gbd_Bristol_2017
 
 
 # ------------------- Add age-groups --------------------# 
@@ -77,9 +77,9 @@ sep$female
 gbd_df <-as.data.frame(rbind(sep$male,sep$female))
 
 
-# ------ Write csv file to process in Dismod-------- #
+# ------ Write csv file to process in Dismod-------- # TO PROCESS
 
-write_csv(gbd_df, "data/england/dismod/input_data.csv")
+write_csv(gbd_df, "MSLT/data/city regions/bristol/dismod/input_data.csv")
 
 # ---- chunk-5 ----
 
@@ -104,6 +104,9 @@ for (i in 2:nrow(disease_short_names)){
        gbd_df[[paste0("prevalence_number_", disease_short_names$sname[i])]]) /
     ( 1 - gbd_df[["ac_ylds_adj_rate_1"]])
 }
+
+# Check that dws were created
+# names(gbd_df)
 
 # ------------------- All-cause death rate ---------------------------#
 
@@ -230,8 +233,7 @@ for (i in 2:nrow(disease_short_names)){
     ## Change name of column death to mx and ylds to pyld_rate to then merge
     ## with input_life table
     colnames(interpolated)[1] <- var_name
-    
-    
+
     
     mslt_df[mslt_df$sex_age_cat == interpolated$sex_age_cat 
             & mslt_df$sex == sex_index, ][[var_name]] <- interpolated[[var_name]]
@@ -240,20 +242,21 @@ for (i in 2:nrow(disease_short_names)){
   }
 }
   
+View(gbd_df)
 # ---- chunk-6 ----
-
-## Use dismod output and add to mslt_df
-
-idata <- read.csv("data/legacy/UK/idata.csv", stringsAsFactors = F)
-
-# Add age_sex category to match with mslt_df
-
-idata$sex_age_cat <- paste(idata$sex,idata$age, sep = "_"  )
-
-idata <- select(idata, -c(age, sex))
-
-mslt_df <- left_join(mslt_df, idata, by = "sex_age_cat")
-
+# 
+# ## Use dismod output and add to mslt_df
+# 
+# idata <- read.csv("data/legacy/UK/idata.csv", stringsAsFactors = F)
+# 
+# # Add age_sex category to match with mslt_df
+# 
+# idata$sex_age_cat <- paste(idata$sex,idata$age, sep = "_"  )
+# 
+# idata <- select(idata, -c(age, sex))
+# 
+# mslt_df <- left_join(mslt_df, idata, by = "sex_age_cat")
+# 
 
 
 # ---- chunk-7 ----
