@@ -1,3 +1,11 @@
+##### To do
+# Issues with Liver cancer, dw hihger than 1 because ylds are higher than prevalence, should not be. Check with GBD
+# Add remission if we decide to use it for cancers
+# Use disbayes to test dismod alternative, also mslt alternative? same principle. 
+# move all parameters to the top of the code (e.g. disease life table generation)
+# move all parameters to the top of the table
+
+
 setwd("hm-scenarios/MSLT")
 getwd()
 # Change to own wd
@@ -15,6 +23,8 @@ require(grid)
 require(ggplot2)
 require(gridExtra)
 require(pillar)
+require(devtools)
+
 
 
 # ---- chunk-1 ----
@@ -76,6 +86,9 @@ sep$female
 
 gbd_df <-as.data.frame(rbind(sep$male,sep$female))
 
+gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
+
+View(gbd_df)
 
 # ------ Write csv file to process in Dismod-------- # TO PROCESS
 
@@ -111,6 +124,12 @@ for (i in 2:nrow(disease_short_names)){
 # ------------------- All-cause death rate ---------------------------#
 
 gbd_df[["ac_death_rate_1"]] <- gbd_df$deaths_number_ac/gbd_df$population_number
+
+
+# ------------------- Replace Nan and Inf numbers -------------------- #
+
+gbd_df[mapply(is.infinite, gbd_df)] <- 0
+gbd_df <- replace(gbd_df, is.na(gbd_df), 0)
 
 # ------------------- MSLT frame --------------------------- #
 
@@ -160,7 +179,7 @@ for(sex_index in i_sex) {
   x <- data$age_cat
   y <- log(data$ac_death_rate_1)
   
-  interpolation_func <- stats::splinefun(x, y, method = "natural", ties = mean)
+  interpolation_func <- stats::splinefun(x, y, method = "monoH.FC", ties = mean)
   
   interpolated <- as.data.frame(interpolation_func(seq(0, 100, 1)))
   age <- seq(0, 100, by = 1)
@@ -181,7 +200,7 @@ for(sex_index in i_sex) {
   x <- data$age_cat
   y <- log(data$ac_ylds_rate_1)
   
-  interpolation_func <- stats::splinefun(x, y, method = "natural", ties = mean)
+  interpolation_func <- stats::splinefun(x, y, method = "monoH.FC", ties = mean)
   
   interpolated <- as.data.frame(interpolation_func(seq(0, 100, 1)))
   age <- seq(0, 100, by = 1)
@@ -221,7 +240,7 @@ for (i in 2:nrow(disease_short_names)){
     x <- data$age_cat
     y <- log(data[[var_name]])
     
-    interpolation_func <- stats::splinefun(x, y, method = "natural", ties = mean)
+    interpolation_func <- stats::splinefun(x, y, method = "monoH.FC", ties = mean)
     
     interpolated <- as.data.frame(interpolation_func(seq(0, 100, 1)))
     age <- seq(0, 100, by = 1)
@@ -242,7 +261,13 @@ for (i in 2:nrow(disease_short_names)){
   }
 }
   
-View(gbd_df)
+View(mslt_df)
+
+# ------------------- Replace Nan and Inf numbers  -------------------- #
+
+mslt_df[mapply(is.infinite, mslt_df)] <- 0
+mslt_df <- replace(mslt_df, is.na(mslt_df), 0)
+
 # ---- chunk-6 ----
 # 
 # ## Use dismod output and add to mslt_df
@@ -279,11 +304,11 @@ for (age in i_age_cohort){
 }
 
 ## Uncommnet to check life table list
-## View(general_life_table_list_bl[[2]])
+# View(general_life_table_list_bl[[2]])
 
 # ---- chunk-8 ----
 
-## Use run_disease
+## Use run_disease 
 
 i_disease <- c("ihd", "is", "dm", "cc", "bc")
 

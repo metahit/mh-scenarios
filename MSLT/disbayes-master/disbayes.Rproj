@@ -11,8 +11,3 @@ Encoding: UTF-8
 
 RnwWeave: Sweave
 LaTeX: pdfLaTeX
-
-BuildType: Package
-PackageUseDevtools: Yes
-PackagePath: C:/Rtools/mingw_64/bin
-PackageInstallArgs: --no-multiarch --with-keep.source

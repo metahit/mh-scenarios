@@ -21,11 +21,41 @@
 
 
 ### Disbayes (Chris Jackson Bayesian Dismod mode, https://chjackson.github.io/disbayes/vignette.html)
-# install.packages("rstan")
-# library(rstan)
-# options(mc.cores = parallel::detectCores())
-# rstan_options(auto_write = TRUE)
 
+## My installation testing to get the build tools
+
+install.packages("rstan")
+pkgbuild::has_build_tools(debug = TRUE)
+pkgbuild::find_rtools(debug = TRUE)
+
+require(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
+## test ihd example london
+datstan <- c(as.list(ihdlondon), nage=nrow(ihdlondon))
+inits <- list(
+  list(cf=rep(0.0101, datstan$nage)),
+  list(cf=rep(0.0201, datstan$nage)),
+  list(cf=rep(0.0056, datstan$nage)),
+  list(cf=rep(0.0071, datstan$nage))
+)
+gbdcf <- stan("MSLT/disbayes-master/gbdcf-unsmoothed.stan", data=datstan, init=inits)
+
+
+
+
+### Try to get Rtools
+install.packages("devtools")
+install.packages("pkgbuild")
+require(pkbuild)
+require(devtools)
+pkgbuild::has_build_tools(debug = TRUE)
+
+
+# tl;dr: If you want to explicitly set up Rtools, you need to update both the PATH and BINPREF environment variables.
+
+# NEED TO GET BUILDING TOOLS
 
 # ---- Prepare data for Bristol City Region ---- (got data from 2007 to 2017 for trends, here only use 2017 data) 
 # Baseline year data (2017)
@@ -38,7 +68,7 @@ gbd_input$location <- as.character(gbd_input$location) # to match with localitie
 
 localities <- c('Bristol, City of', 'Bath and North East Somerset', 'North Somerset', 'South Gloucestershire')
 
-year <- 2017 
+year <- 2017
 
 ### Loop to create a raw data set for 2017 for each of the localities to calculate population numbers
 

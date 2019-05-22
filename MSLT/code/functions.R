@@ -592,5 +592,3 @@ plot_GBD <- function(in_data1, in_data2, in_sex, in_cause, in_measure) {
   print(p)
 }
 
-
-
