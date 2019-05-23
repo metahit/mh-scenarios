@@ -25,6 +25,7 @@
 ## My installation testing to get the build tools
 
 install.packages("rstan")
+# install.packages("C:/Rtools/mingw_64/bin", repos = NULL, type="source") not workin installing from source. 
 pkgbuild::has_build_tools(debug = TRUE)
 pkgbuild::find_rtools(debug = TRUE)
 
@@ -41,6 +42,10 @@ inits <- list(
   list(cf=rep(0.0071, datstan$nage))
 )
 gbdcf <- stan("MSLT/disbayes-master/gbdcf-unsmoothed.stan", data=datstan, init=inits)
+
+## Extract Summary statistics
+
+gbd_cf_summ <- summary(gbdcf)$summary
 
 
 
