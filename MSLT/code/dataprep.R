@@ -20,48 +20,6 @@
 # London: all London boroughs and the City of London.
 
 
-### Disbayes (Chris Jackson Bayesian Dismod mode, https://chjackson.github.io/disbayes/vignette.html)
-
-## My installation testing to get the build tools
-
-install.packages("rstan")
-# install.packages("C:/Rtools/mingw_64/bin", repos = NULL, type="source") not workin installing from source. 
-pkgbuild::has_build_tools(debug = TRUE)
-pkgbuild::find_rtools(debug = TRUE)
-
-require(rstan)
-options(mc.cores = parallel::detectCores())
-rstan_options(auto_write = TRUE)
-
-## test ihd example london
-datstan <- c(as.list(ihdlondon), nage=nrow(ihdlondon))
-inits <- list(
-  list(cf=rep(0.0101, datstan$nage)),
-  list(cf=rep(0.0201, datstan$nage)),
-  list(cf=rep(0.0056, datstan$nage)),
-  list(cf=rep(0.0071, datstan$nage))
-)
-gbdcf <- stan("MSLT/disbayes-master/gbdcf-unsmoothed.stan", data=datstan, init=inits)
-
-## Extract Summary statistics
-
-gbd_cf_summ <- summary(gbdcf)$summary
-
-
-
-
-### Try to get Rtools
-install.packages("devtools")
-install.packages("pkgbuild")
-require(pkbuild)
-require(devtools)
-pkgbuild::has_build_tools(debug = TRUE)
-
-
-# tl;dr: If you want to explicitly set up Rtools, you need to update both the PATH and BINPREF environment variables.
-
-# NEED TO GET BUILDING TOOLS
-
 # ---- Prepare data for Bristol City Region ---- (got data from 2007 to 2017 for trends, here only use 2017 data) 
 # Baseline year data (2017)
 # Get data ready for processing in mslt_code.r line 33 (need to do per locality and then add up to region, can add number 
@@ -183,3 +141,44 @@ View(gbd_Bristol_2017[,"prevalence_number_lc"])
 write_csv(gbd_Bristol_2017, "MSLT/data/city regions/bristol/test/gbd_Bristol_2017.csv")
 
 # Trends data (2007 to 2017)
+
+
+### Disbayes (Chris Jackson Bayesian Dismod mode, https://chjackson.github.io/disbayes/vignette.html) (this should be in the mslt code)
+
+# install.packages("rstan")
+
+require(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
+## test ihd example london
+datstan <- c(as.list(ihdlondon), nage=nrow(ihdlondon))
+inits <- list(
+  list(cf=rep(0.0101, datstan$nage)),
+  list(cf=rep(0.0201, datstan$nage)),
+  list(cf=rep(0.0056, datstan$nage)),
+  list(cf=rep(0.0071, datstan$nage))
+)
+gbdcf <- stan("MSLT/disbayes-master/gbdcf-unsmoothed.stan", data=datstan, init=inits)
+
+## Extract Summary statistics
+
+gbd_cf_summ <- summary(gbdcf)$summary
+
+### Data preps Disbayes ready.
+
+## Inputs from gbd_df (CHECK THIS WORKS WITH CHRIS): 
+### incidence and mortality rates per one by age and sex.
+### one-year population derived from dividing 5-year age groups by 5 (pop in the disbayes data input)
+### ndiediss is the product of population number by the rate of mortlaity (5-year age rate?) Same for incidence per one rate?
+### prevalence: prevdenom and prev (numberator). "The numerators and denominators are not provided in the source data, so we assume values for the 
+### denominators, given in the variable prevdenom.The corresponding numberators prevn are then obtained by multiplying prevdenom by the provided
+### prevalence estimates, and rounding to the nearest integer. 
+### Inputs (i, r, n): 
+#### Age: 1:100
+#### inc (incidence): population by one year age group by incidence rate by 5-year age group (check with Chris)
+#### cfout (case fatality): dm(disease specific mortality), counts of individuals alive at age a and the corresponding number who die before age a + 1
+#### check whe
+
+
+

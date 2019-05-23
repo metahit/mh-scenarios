@@ -3,7 +3,10 @@
 # Add remission if we decide to use it for cancers
 # Use disbayes to test dismod alternative, also mslt alternative? same principle. 
 # move all parameters to the top of the code (e.g. disease life table generation)
+# move disbayes to mslt.code
 # move all parameters to the top of the table
+# Include uncertainty parameters from disbayes estimates in model
+# Naming data frames, check so the naming makes sense to others
 
 
 setwd("hm-scenarios/MSLT")
@@ -88,7 +91,35 @@ gbd_df <-as.data.frame(rbind(sep$male,sep$female))
 
 gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
 
+
+# ------------------- calculate rates per one--------------------# 
+
+disease_measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability")
+disease_name <- c("ac", "adod", "blc", "bc", "cml", "crc", 
+              "kc", "pc", "dmt2", "ec", "hhd", "ihd", 
+              "is","lc","mdd", "msm", "mm", "pd", "sc", 
+              "tblc", "uc")
+
+
+## need except for incidence and prevalence all cause. ISSUE WITH NAMING OF DENOMINATOR
+
+for (m in disease_measures) {
+  for (d in disease_name){
+    # if (m == "incidence" && d == "ac") {
+    #   # cat("\n") #Uncomment to see list
+    # }
+    # else {
+  gbd_df[[paste0(m,"_rate_", d)]] <- 1/ gbd_df$population_number
+    
+    # gbd_df[[paste0(m,"_number_", d)]]
+      
+    }
+  }
+
+
 View(gbd_df)
+
+names(gbd_df)
 
 # ------ Write csv file to process in Dismod-------- # TO PROCESS
 
