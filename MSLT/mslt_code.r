@@ -91,35 +91,38 @@ gbd_df <-as.data.frame(rbind(sep$male,sep$female))
 
 gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
 
+names(gbd_df)
 
 # ------------------- calculate rates per one--------------------# 
-
-disease_measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability")
-disease_name <- c("ac", "adod", "blc", "bc", "cml", "crc", 
-              "kc", "pc", "dmt2", "ec", "hhd", "ihd", 
-              "is","lc","mdd", "msm", "mm", "pd", "sc", 
+### Best to have all parameters at the beginning of the code, I did not use the disease_short names here as I was not able to include 
+### a line to exclude all cause incidence and all cause prevalence and these are problematic. 
+disease_measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability)")
+disease_name <- c("ac", "adod", "blc", "bc", "cml", "crc",
+              "kc", "pc", "dmt2", "ec", "hhd", "ihd",
+              "is","lc","mdd", "msm", "mm", "pd", "sc",
               "tblc", "uc")
 
-
-## need except for incidence and prevalence all cause. ISSUE WITH NAMING OF DENOMINATOR
-
-for (m in disease_measures) {
-  for (d in disease_name){
-    # if (m == "incidence" && d == "ac") {
-    #   # cat("\n") #Uncomment to see list
-    # }
-    # else {
-  gbd_df[[paste0(m,"_rate_", d)]] <- 1/ gbd_df$population_number
+for (dm in disease_measures) {
+  for (dn in disease_name) {
+  
     
-    # gbd_df[[paste0(m,"_number_", d)]]
-      
+    # Exclude ac for prevalence and incidence
+    if((dm == "incidence" && dn == "ac") || (dm == "prevalence" && dn == "ac" ) ){
+      # cat("\n") # Uncomment to see list
     }
+    else {
+    
+      gbd_df[[paste0(dm, "_rate_", dn)]] <- gbd_df[[paste0(dm, "_number_", dn)]]/gbd_df$population_number
+        
+        }
+      }
   }
 
-
+# warnings()
+names(gbd_df)
 View(gbd_df)
 
-names(gbd_df)
+
 
 # ------ Write csv file to process in Dismod-------- # TO PROCESS
 

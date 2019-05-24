@@ -133,10 +133,10 @@ gbd_Bristol <- gbd_Bristol_all_loc %>%
 gbd_Bristol_2017 <- gbd_Bristol %>%
   separate(sex_age_cat, c("sex", "age"), "_")
 
-
-View(gbd_Bristol_2017)
-View(gbd_Bristol_2017[,"ylds (years lived with disability)_number_lc"])
-View(gbd_Bristol_2017[,"prevalence_number_lc"])
+# 
+# View(gbd_Bristol_2017)
+# View(gbd_Bristol_2017[,"ylds (years lived with disability)_number_lc"])
+# View(gbd_Bristol_2017[,"prevalence_number_lc"])
 
 write_csv(gbd_Bristol_2017, "MSLT/data/city regions/bristol/test/gbd_Bristol_2017.csv")
 
