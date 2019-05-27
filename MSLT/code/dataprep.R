@@ -113,7 +113,7 @@ gbd_Bristol_all_loc <-  select(gbd_Bristol_all_loc,-contains("rate"))
 gbd_Bristol_all_loc$age <- as.character(gbd_Bristol_all_loc$age)
 gbd_Bristol_all_loc$sex <- as.character(gbd_Bristol_all_loc$sex)
 gbd_Bristol_all_loc$sex_age_cat <- paste(gbd_Bristol_all_loc$sex, gbd_Bristol_all_loc$age, sep = "_")
-gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex, location, number, prevalence_number_ac, incidence_number_ac))
+gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex, location, number))
 
 ## Check dataset values in excel
 
@@ -125,7 +125,6 @@ write_csv(gbd_Bristol_all_loc, "MSLT/data/city regions/bristol/test/all_localiti
 gbd_Bristol <- gbd_Bristol_all_loc %>%
   group_by(sex_age_cat) %>%
   summarise_all(funs(sum))
-
 
 
 ### Create two new columns for age and seX

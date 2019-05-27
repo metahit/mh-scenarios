@@ -49,8 +49,9 @@ gbd_df <- gbd_Bristol_2017
 
 
 # ------------------- Add age-groups --------------------# 
-
 # 22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97
+
+gbd_df$age_cat <- 0
 gbd_df$age_cat [gbd_df$age =="Under 5"] <- 2
 gbd_df$age_cat [gbd_df$age =="5 to 9"] <- 7
 gbd_df$age_cat [gbd_df$age =="10 to 14"] <- 12
@@ -72,30 +73,24 @@ gbd_df$age_cat [gbd_df$age =="85 to 89"] <- 87
 gbd_df$age_cat [gbd_df$age =="90 to 94"] <- 92
 gbd_df$age_cat [gbd_df$age =="95 plus"] <- 97
 
+
 ### change sex to lower case
 
 gbd_df$sex <- tolower(gbd_df$sex)
 
 gbd_df$sex_age_cat <- paste(gbd_df$sex,gbd_df$age_cat, sep = "_"  )
+# View(gbd_df)
+# names(gbd_df)
 
 # ------------------- Sort frame --------------------# 
 
-sep<-split(gbd_df,gbd_df$sex)
-sep$male<-sep$male[order(sep$male[,2]),]
-sep$male
-
-sep$female<-sep$female[order(sep$female[,2]),]
-sep$female
-
-gbd_df <-as.data.frame(rbind(sep$male,sep$female))
-
 gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
 
-names(gbd_df)
-
 # ------------------- calculate rates per one--------------------# 
-### Best to have all parameters at the beginning of the code, I did not use the disease_short names here as I was not able to include 
-### a line to exclude all cause incidence and all cause prevalence and these are problematic. 
+### hhd incidence and mdd deaths are excluded as we have no data in original gbd data frame. Consult with Oxford team modelling of these
+### diseases. 
+
+### Try to use same parameters as in data prep
 disease_measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability)")
 disease_name <- c("ac", "adod", "blc", "bc", "cml", "crc",
               "kc", "pc", "dmt2", "ec", "hhd", "ihd",
@@ -104,16 +99,15 @@ disease_name <- c("ac", "adod", "blc", "bc", "cml", "crc",
 
 for (dm in disease_measures) {
   for (dn in disease_name) {
-  
-    
-    # Exclude ac for prevalence and incidence
-    if((dm == "incidence" && dn == "ac") || (dm == "prevalence" && dn == "ac" ) ){
+
+
+    # Exclude hdd and incidence and deaths and mdd
+    if((dm == "incidence" && dn == "hhd") || (dm == "deaths" && dn == "mdd" ) ){
       # cat("\n") # Uncomment to see list
     }
     else {
-    
+
       gbd_df[[paste0(dm, "_rate_", dn)]] <- gbd_df[[paste0(dm, "_number_", dn)]]/gbd_df$population_number
-        
         }
       }
   }
@@ -121,8 +115,6 @@ for (dm in disease_measures) {
 # warnings()
 names(gbd_df)
 View(gbd_df)
-
-
 
 # ------ Write csv file to process in Dismod-------- # TO PROCESS
 
