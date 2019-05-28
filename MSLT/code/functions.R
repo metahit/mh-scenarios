@@ -21,22 +21,23 @@ require(citr)
 # the disability adjusment of life years. 
 
 # Method reference: 1.	Barendregt JJ, Oortmarssen vGJ, Murray CJ, Vos T. A generic model for the assessment of disease epidemiology: the computational basis of DisMod II. Popul Health Metr. 2003;1(1):4-.
+# Naming convention for functions: Function.Name
 
 # ---- Functions ----
 
-# run_life_table, run_disease, run_pif (temp), run_output 
+# SortGbdInput, RunLocDf, RunLifeTable, RunDisease, RunPif, RunOutput run_life_table, run_disease, run_pif (temp), run_output 
 
-# ---- sort_gbd_input ----
+# ---- Sort.Gbd.Input ----
 
-sort_gbd_input <- function(in_data, in_year, in_locality) {
+SortGbdInput <- function(in_data, in_year, in_locality) {
   data <- in_data[which(in_data$year== in_year & in_data$location == in_locality),]
 }
 
-# --- run_loc_df ---- MAY DELETE, LOOP through list rather than function, in i_data, do we need a for loop to go through data elements?
+## Selects year and localities from GBD data frame dowloaded from: http://ghdx.healthdata.org/gbd-results-tool
 
+# --- RunLocDf ---- 
 
-
-run_loc_df <- function(i_data) {
+RunLocDf <- function(i_data) {
 
 gbd_df <- NULL 
 
@@ -113,13 +114,14 @@ for (ag in 1:length(unique(i_data$age))){
 return(gbd_df)
 }
 
+## Sorts out each locality data frame into a list with column names for age, sex, and each cause and disease combination and calculates population numbers.
 
-# ---- run_life_table ----
+# ---- RunLifeTable ----
 
 #####Function to generate age and sex life tables. The function is then use in the model.R script
 #####to calculate variables for the baseline and scenario life tables. 
 
-run_life_table <- function(in_idata, in_sex, in_mid_age)
+RunLifeTable <- function(in_idata, in_sex, in_mid_age)
 {
   
   # Create a life table data frame
@@ -180,9 +182,9 @@ run_life_table <- function(in_idata, in_sex, in_mid_age)
 
 
 
-# ---- run_disease ----(ADD REMISSION FOR CANCERS?)
+# ---- RunDisease ----(ADD REMISSION FOR CANCERS?)
 
-run_disease <- function(in_idata, in_mid_age, in_sex, in_disease) 
+RunDisease <- function(in_idata, in_mid_age, in_sex, in_disease) 
   
 {
   
@@ -296,12 +298,12 @@ run_disease <- function(in_idata, in_mid_age, in_sex, in_disease)
 }
 
 
-# run_pif (temp) ----
+# RunPif (temp) ----
 
 # The code for PIFs will depend on the data sources. 
 
 
-run_pif <- function(in_idata, i_irr, i_exposure, in_mid_age, in_sex, in_disease, in_met_sc) 
+RunPif <- function(in_idata, i_irr, i_exposure, in_mid_age, in_sex, in_disease, in_met_sc) 
   # 
 {
   
@@ -405,12 +407,12 @@ run_pif <- function(in_idata, i_irr, i_exposure, in_mid_age, in_sex, in_disease,
 }
 
 
-# ---- plot_output ----
+# ---- PlotOutput ----
 
 # Function to generate graphs by age and sex, per outcome of interest. 
 
 
-plot_output <- function(in_data, in_age, in_population, in_outcomes, in_legend = "", in_disease = ""){
+PlotOutput <- function(in_data, in_age, in_population, in_outcomes, in_legend = "", in_disease = ""){
   
   # in_data <- output_df
   # in_population <- "male"
@@ -461,11 +463,11 @@ plot_output <- function(in_data, in_age, in_population, in_outcomes, in_legend =
 }
 
 
-# ---- gen_aggregate ----
+# ---- GenAggregate ----
 # Function to aggreate outcomes by age an sex
 
 
-gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes){
+GenAggregate <- function(in_data, in_cohorts, in_population, in_outcomes){
   
   
   # in_data <- output_df
@@ -509,10 +511,10 @@ gen_aggregate <- function(in_data, in_cohorts, in_population, in_outcomes){
   aggr
 }
 
-# ---- grid_arrange_shared_legend ----
+# ---- GridArrangSharedLegend ----
 # Function to general combined labels for multiple plots in a page
 
-grid_arrange_shared_legend <- function(..., ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), mainTitle = "", mainLeft = "", mainBottom = "") {
+GridArrangSharedLegend <- function(..., ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), mainTitle = "", mainLeft = "", mainBottom = "") {
   
   plots <- list(...)
   position <- match.arg(position)
@@ -550,10 +552,10 @@ g_legend <- function(a.gplot){
   return(legend)
 }
 
-# ---- get_qualified_disease_name
+# ---- GetQualifiedDiseaseName ----
 # Function to get qualified names diseases
 
-get_qualified_disease_name <- function (disease){
+GetQualifiedDiseaseName <- function (disease){
   if (disease == 'ihd')
     return ('Ischaemic Heart Disease')
   else if (disease == 'bc')
@@ -566,10 +568,10 @@ get_qualified_disease_name <- function (disease){
     return ('Ischemic stroke')
 }
 
-# ---- plot_GBD (may need to update) ----
+# ---- PlotGBD (may need to update) ----
 # Function to generate GBD graphs to compare data national to local (USED in GBD COMPARE############################
 
-plot_GBD <- function(in_data1, in_data2, in_sex, in_cause, in_measure) {
+PlotGBD <- function(in_data1, in_data2, in_sex, in_cause, in_measure) {
   
   # in_data1 <- GBDEngland
   # in_data2 <- GBDGL
