@@ -18,7 +18,7 @@
 # GBF reference for data: James, S. L., et al. (2018). "Global, regional, and national incidence, prevalence, and years lived with disability for 354 diseases and injuries for 195 countries and territories, 1990&#x2013;2017: a systematic analysis for the Global Burden of Disease Study 2017." The Lancet 392(10159): 1789-1858.
 # For the UK (GBD Ref): For the UK the analyses is by Local Administrative Area (level 6 in GBD hierarchy). 
 # Do a set of Dismod outputs with remission for cancers to test the difference in results. 
-
+# use yml to define variables to facilitate reuse of code. See Carls suggestions.config.yml 
 setwd("hm-scenarios/MSLT")
 getwd()
 # Change to own wd
@@ -481,7 +481,7 @@ for (age in i_age_cohort){
 ## Uncommnet to check disease life table list
 View(disease_life_table_list_bl[[8]])
 
-rlang::last_error()
+
 
 
 # ---- chunk-9 ----
@@ -495,8 +495,8 @@ incidence_change <- 0.95
 incidence_sc <- list()
 index <- 1
 
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     for (disease in i_disease) {
       
       # Exclude bc for Males
@@ -522,12 +522,18 @@ for (age in i.age.cohort){
 
 disease_life_table_list_sc <- list()
 index <- 1
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     for (disease in i_disease) {
       # Exclude bc for Males
       if (sex == "male" && disease == "bc"){
-        # cat("\n")
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "male" && disease == "uc"){
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "female" && disease == "pc"){
+        # cat("\n") #Uncomment to see list
       }
       else {
         # cat("age ", age, " sex ", sex, "and disease", disease, "\n")
@@ -563,8 +569,8 @@ for (age in i.age.cohort){
 mx_sc_total <- list()
 l_index <- 1
 index <- 1
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     mortality_sum <- NULL
     create_new <- T
     
@@ -604,8 +610,8 @@ for (age in i.age.cohort){
 pylds_sc_total <- list()
 l_index <- 1
 index <- 1
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     pylds_sum <- NULL
     create_new <- T
     
@@ -648,8 +654,8 @@ general_life_table_list_sc <- list()
 index <- 1
 
 
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     
     
     # cat("age ", age, " and sex ", sex, "\n")
@@ -686,8 +692,8 @@ for (age in i.age.cohort){
 output_burden <- list()
 l_index <- 1
 index <- 1
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     
     # Males do not have breast cancer, that is why we need the if/else.
     # We create a TRUE/FALSE variable for the loop to move into the next disease
