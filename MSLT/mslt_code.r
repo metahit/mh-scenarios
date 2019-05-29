@@ -1,5 +1,6 @@
 ##### To do
-# Issues with Liver cancer, dw hihger than 1 because ylds are higher than prevalence, should not be. Check with GBD
+# Issues with Liver cancer, dw hihger than 1 because ylds are higher than prevalence, should not be. Check with GBD.
+# Ignore prevalence in Dismod processing and compare GBD estimates with Dismod output. 
 # Add remission if we decide to use it for cancers
 # Use disbayes to test dismod alternative, also mslt alternative? same principle. 
 # move all parameters to the top of the code (e.g. disease life table generation)
@@ -10,6 +11,13 @@
 # Check naming convention: FunctionName, variable.name (changed some)
 # Hypertensive Heart Disease does not have incidence (https://www.thelancet.com/action/showFullTableHTML?isHtml=true&tableId=tbl1&pii=S0140-6736%2818%2932279-7)
 # Major Depressive Disorders does not have deaths (https://www.thelancet.com/action/showFullTableHTML?isHtml=true&tableId=tbl1&pii=S0140-6736%2818%2932203-7)
+# Prevalence estimates in the GBD assume remission after 10 years. If we do not assume remission, then we need to: 1) use only incidence and mortlaity
+# for cancers estimates in Dismod; 2) Deflate DW by the ratio of Dismod estimated prevalence and GBD prevalence. 
+# From GBD appendix: "Prevalence for all cancers is estimated for a maximum of ten years after incidence, as in GBD 2013-2016. Prevalence beyond the
+# ten yera period is only estimated for permanent sequelae resulting from procedures. 
+# GBF reference for data: James, S. L., et al. (2018). "Global, regional, and national incidence, prevalence, and years lived with disability for 354 diseases and injuries for 195 countries and territories, 1990&#x2013;2017: a systematic analysis for the Global Burden of Disease Study 2017." The Lancet 392(10159): 1789-1858.
+# For the UK (GBD Ref): For the UK the analyses is by Local Administrative Area (level 6 in GBD hierarchy). 
+# Do a set of Dismod outputs with remission for cancers to test the difference in results. 
 
 setwd("hm-scenarios/MSLT")
 getwd()
@@ -44,15 +52,15 @@ source("MSLT/code/functions.R")
 
 # ---- chunk-4 ----
 
-## Parameters
+## Parameters (Local Goverment Authority Area)
 
 localities <- c('Bristol, City of', 'Bath and North East Somerset', 'North Somerset', 'South Gloucestershire')
 
 year <- 2017
 
-i.age.cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97)
+i_age_cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97)
 
-i.sex <- c("male", "female")
+i_sex <- c("male", "female")
 
 disease_short_names <- data.frame(disease = c("All causes", 
                                               "Alzheimer's disease and other dementias", 
@@ -306,7 +314,7 @@ mslt_df <- left_join(mslt_df, gbd_popn_df, by = "sex_age_cat")
 mslt_df[["mx"]] <- mslt_df[["pyld_rate"]] <- NA
 
 
-for(sex_index in i.sex) {
+for(sex_index in i_sex) {
   # sex_index <- "female"
   # measure_index <- "ac_death_rate_1"
   
@@ -364,7 +372,7 @@ for (i in 2:nrow(disease_short_names)){
 
 
 for (i in 2:nrow(disease_short_names)){
-  for(sex_index in i.sex) {
+  for(sex_index in i_sex) {
     
     # i <- 2
     # sex_index <- "female"
@@ -403,21 +411,21 @@ View(mslt_df)
 mslt_df[mapply(is.infinite, mslt_df)] <- 0
 mslt_df <- replace(mslt_df, is.na(mslt_df), 0)
 
-# ---- chunk-6 ----
-# 
-# ## Use dismod output and add to mslt_df
-# 
-# idata <- read.csv("data/legacy/UK/idata.csv", stringsAsFactors = F)
-# 
-# # Add age_sex category to match with mslt_df
-# 
-# idata$sex_age_cat <- paste(idata$sex,idata$age, sep = "_"  )
-# 
-# idata <- select(idata, -c(age, sex))
-# 
-# mslt_df <- left_join(mslt_df, idata, by = "sex_age_cat")
-# 
+# ---- chunk-6 ---- CODE TO PICK UP DIRECTLY FROM dismod OUTPUT EXCEL, temporarly I copied and paste. Discuss with Alan and Carl
 
+## Use dismod output and add to mslt_df
+
+idata <- read.csv("MSLT/data/city regions/bristol/dismod/idata_test.csv", stringsAsFactors = F)
+
+# Add age_sex category to match with mslt_df
+
+idata$sex_age_cat <- paste(idata$sex,idata$age, sep = "_"  )
+
+idata <- select(idata, -c(age, sex))
+
+mslt_df <- left_join(mslt_df, idata, by = "sex_age_cat")
+
+View(mslt_df)
 
 # ---- chunk-7 ----
 
@@ -427,8 +435,8 @@ general_life_table_list_bl <- list()
 
 index <- 1
 
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     # cat("age ", age, " and sex ", sex, "\n") #Uncomment to see index
     general_life_table_list_bl[[index]] <- RunLifeTable(in_idata = mslt_df,
                                                           in_sex = sex, in_mid_age = age)
@@ -443,17 +451,23 @@ for (age in i.age.cohort){
 
 ## Use RunDisease 
 
-i_disease <- c("ihd", "is", "dm", "cc", "bc")
+i_disease <- c("is", "ihd", "bc", "uc", "tblc", "crc", "ec", "lc", "kc", "sc", "cml", "mm", "blc", "pc", "msm", "adod", "pd", "dmt2")
 
 
 disease_life_table_list_bl <- list()
 index <- 1
 
-for (age in i.age.cohort){
-  for (sex in i.sex){
+for (age in i_age_cohort){
+  for (sex in i_sex){
     for (disease in i_disease) {
       # Exclude bc for Males
       if (sex == "male" && disease == "bc"){
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "male" && disease == "uc"){
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "female" && disease == "pc"){
         # cat("\n") #Uncomment to see list
       }
       else {
@@ -466,6 +480,8 @@ for (age in i.age.cohort){
 }
 ## Uncommnet to check disease life table list
 View(disease_life_table_list_bl[[8]])
+
+rlang::last_error()
 
 
 # ---- chunk-9 ----
