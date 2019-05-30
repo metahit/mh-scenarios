@@ -180,8 +180,6 @@ RunLifeTable <- function(in_idata, in_sex, in_mid_age)
   
 }
 
-
-
 # ---- RunDisease ----(ADD REMISSION FOR CANCERS?)
 
 RunDisease <- function(in_idata, in_mid_age, in_sex, in_disease) 

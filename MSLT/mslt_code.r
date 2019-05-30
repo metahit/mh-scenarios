@@ -486,7 +486,9 @@ View(disease_life_table_list_bl[[8]])
 
 # ---- chunk-9 ----
 
-## Create value to use as factor changing incidence rates.
+## Create value to use as factor changing incidence rates. REPLACE with (1-PIF) and use multiplicative PIF for common disease risk factors. 
+
+## Rob's comment about PIFs calcs: see function "health burden" in metahit_functions.R
 
 incidence_change <- 0.95
 
@@ -617,8 +619,15 @@ for (age in i_age_cohort){
     
     for (disease in i_disease) {
       if (sex == "male" && disease == "bc"){
-        # cat("\n")
-      }else{
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "male" && disease == "uc"){
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "female" && disease == "pc"){
+        # cat("\n") #Uncomment to see list
+      }
+      else {
         
         if (create_new){
           pylds_sum <- select(disease_life_table_list_sc[[index]], c('age', 'sex'))
@@ -701,8 +710,15 @@ for (age in i_age_cohort){
     create_new <- T
     for (disease in i_disease) {
       if (sex == "male" && disease == "bc"){
-        # cat("\n")
-      }else{
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "male" && disease == "uc"){
+        # cat("\n") #Uncomment to see list
+      }
+      if (sex == "female" && disease == "pc"){
+        # cat("\n") #Uncomment to see list
+      }
+      else {
         
         if (create_new){
           output_burden_sc <- select(disease_life_table_list_sc[[index]],
@@ -856,32 +872,40 @@ output_df <- plyr::ldply(output_burden, rbind)
 View(output_df)
 
 
-# ---- chunk- 14 ----
+# ---- chunk- 14 ----  TO DO, presentaiton of results. 
 
-# Generate graphs change in mortality and incidence numbers by age/sex.
+# Generate graphs change in mortality and incidence numbers by age/sex. (NEED TO ADJUST THIS CODE TO MORE DISEASES)
+# The code is only set up for the 5 original PA related diseases. 
 
-output_dir = "output/graphs"
+output_dir = "MSLT/output"
 
-i.age.cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97)
-i.sex <- c("male", "female")
+i_age_cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97)
+i_sex <- c("male", "female")
 i_measure <- c("deaths", "ylds") #" (years lived with disability)")
 i_outcome <- c("mx", "inc")
-output_dir <- "output/graphs"
-i_disease <- c("ihd", "is", "dm", "cc", "bc")
+output_dir <- "MSLT/output"
+
 
 i_outcome <- c("mx", "inc")
 p_list_male <- list()
 p_list_female <- list()
 male_index <- 1
 female_index <- 1
-for (age in i.age.cohort){
-  for (sex in i.sex) {
+for (age in i_age_cohort){
+  for (sex in i_sex) {
     for (outcome in i_outcome) {
       for (disease in i_disease){
         
         if (sex == "male" && disease == "bc"){
-          # cat("\n")
-        }else{
+          # cat("\n") #Uncomment to see list
+        }
+        if (sex == "male" && disease == "uc"){
+          # cat("\n") #Uncomment to see list
+        }
+        if (sex == "female" && disease == "pc"){
+          # cat("\n") #Uncomment to see list
+        }
+        else {
           
           p_index  <- PlotOutput(in_data = output_df, in_age = age, in_population = sex, in_outcomes = c("age", paste(outcome, "num", "bl", disease, sep = "_"), paste(outcome, "num", "sc", disease, sep = "_"), paste(outcome, "num", "diff", disease, sep = "_")), in_disease = GetQualifiedDiseaseName(disease))
           
@@ -896,7 +920,7 @@ for (age in i.age.cohort){
               p3 <- p_list_male[[male_index - 1]] + theme(legend.position="none", axis.title.x = element_blank(),  axis.title.y = element_blank())
               p4 <- p_index + theme(legend.position="none", axis.title.x = element_blank(),  axis.title.y = element_blank())
               
-              jpeg(paste0(output_dir, paste(age, sex, outcome, sep="_"), ".jpeg"))
+              jpeg(paste0(output_dir, "/", paste(age, sex, outcome, sep="_"), ".jpeg"))
               GridArrangSharedLegend (p1, p2, p3, p4, ncol = 2, nrow = 2, mainTitle = paste(ifelse(outcome == "mx", "Deaths", "Incidence"), sex, "cohort mid age", age),
                                           mainLeft = 'Cases', mainBottom = 'Age')
               dev.off()
@@ -917,7 +941,7 @@ for (age in i.age.cohort){
               p4 <- p_list_female[[female_index - 1]] + theme(legend.position="none", axis.title.x = element_blank(),  axis.title.y = element_blank())
               p5 <- p_index + theme(legend.position="none", axis.title.x = element_blank(),  axis.title.y = element_blank())
               
-              jpeg(paste0(output_dir, paste(age, sex, outcome, sep="_"), ".jpeg"))
+              jpeg(paste0(output_dir, "/", paste(age, sex, outcome, sep="_"), ".jpeg"))
               GridArrangSharedLegend (p1, p2, p3, p4, p5, ncol = 2, nrow = 3, mainTitle = paste(ifelse(outcome == "mx", "Deaths", "Incidence"), sex, "cohort mid age", age), mainLeft = 'Cases', mainBottom = 'Age')
               dev.off()
               
