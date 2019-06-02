@@ -36,10 +36,14 @@ SortGbdInput <- function(in_data, in_year, in_locality) {
 ## Selects year and localities from GBD data frame dowloaded from: http://ghdx.healthdata.org/gbd-results-tool
 
 # --- RunLocDf ---- 
+# 
+# i_data <- gbd_data_localities_raw[[1]]
+
 
 RunLocDf <- function(i_data) {
 
 gbd_df <- NULL 
+
 
 for (ag in 1:length(unique(i_data$age))){
   for (gender in c("Male", "Female")){
@@ -49,10 +53,11 @@ for (ag in 1:length(unique(i_data$age))){
         dn <- disease_short_names$disease[d]
         dmeasure <- disease_measures[dm] %>% as.character()
         # gender <- "Male"
-        
+ 
         agroup <- unique(i_data$age)[ag]
         
         idf <- filter(i_data, sex == gender & age == agroup & measure == dmeasure & cause == dn)
+        
         
         if (nrow(idf) > 0){
           
@@ -90,7 +95,7 @@ for (ag in 1:length(unique(i_data$age))){
           
         }
         
-        #age_range <- years %>% str_match_all("[0-9]+") %>% unlist %>% as.numeric
+        # age_range <- years %>% str_match_all("[0-9]+") %>% unlist %>% as.numeric
         
       }
     }
@@ -113,6 +118,7 @@ for (ag in 1:length(unique(i_data$age))){
 }
 return(gbd_df)
 }
+
 
 ## Sorts out each locality data frame into a list with column names for age, sex, and each cause and disease combination and calculates population numbers.
 

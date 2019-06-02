@@ -1,25 +1,21 @@
 ##### To do
-# Issues with Liver cancer, dw hihger than 1 because ylds are higher than prevalence, should not be. Check with GBD.
-# Ignore prevalence in Dismod processing and compare GBD estimates with Dismod output. 
+
 # Add remission if we decide to use it for cancers
 # Use disbayes to test dismod alternative, also mslt alternative? same principle. 
 # move all parameters to the top of the code (e.g. disease life table generation)
 # move disbayes to mslt.code
 # move all parameters to the top of the table
 # Include uncertainty parameters from disbayes estimates in model
-# Naming data frames, check so the naming makes sense to others
-# Check naming convention: FunctionName, variable.name (changed some)
-# Hypertensive Heart Disease does not have incidence (https://www.thelancet.com/action/showFullTableHTML?isHtml=true&tableId=tbl1&pii=S0140-6736%2818%2932279-7)
-# Major Depressive Disorders does not have deaths (https://www.thelancet.com/action/showFullTableHTML?isHtml=true&tableId=tbl1&pii=S0140-6736%2818%2932203-7)
 # Prevalence estimates in the GBD assume remission after 10 years. If we do not assume remission, then we need to: 1) use only incidence and mortlaity
 # for cancers estimates in Dismod; 2) Deflate DW by the ratio of Dismod estimated prevalence and GBD prevalence. 
 # From GBD appendix: "Prevalence for all cancers is estimated for a maximum of ten years after incidence, as in GBD 2013-2016. Prevalence beyond the
 # ten yera period is only estimated for permanent sequelae resulting from procedures. 
-# GBF reference for data: James, S. L., et al. (2018). "Global, regional, and national incidence, prevalence, and years lived with disability for 354 diseases and injuries for 195 countries and territories, 1990&#x2013;2017: a systematic analysis for the Global Burden of Disease Study 2017." The Lancet 392(10159): 1789-1858.
+# GBD reference for data: James, S. L., et al. (2018). "Global, regional, and national incidence, prevalence, and years lived with disability for 354 diseases and injuries for 195 countries and territories, 1990&#x2013;2017: a systematic analysis for the Global Burden of Disease Study 2017." The Lancet 392(10159): 1789-1858.
 # For the UK (GBD Ref): For the UK the analyses is by Local Administrative Area (level 6 in GBD hierarchy). 
 # Do a set of Dismod outputs with remission for cancers to test the difference in results. 
-# use yml to define variables to facilitate reuse of code. See Carls suggestions.config.yml 
-setwd("hm-scenarios/MSLT")
+# use yml to define variables to facilitate reuse of code. See Carls suggestions.config.yml
+
+
 getwd()
 # Change to own wd
 
@@ -62,45 +58,50 @@ i_age_cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97
 
 i_sex <- c("male", "female")
 
+### Need to change to match latest dataset (check lower respiratory infections)
+
 disease_short_names <- data.frame(disease = c("All causes", 
-                                              "Alzheimer's disease and other dementias", 
-                                              "Bladder cancer", 
+                                              "Lower respiratory infections",
+                                              "Tracheal, bronchus, and lung cancer",
                                               "Breast cancer", 
-                                              "Chronic myeloid leukemia", 
                                               "Colon and rectum cancer", 
-                                              "Kidney cancer", 
-                                              "Prostate cancer", 
-                                              "Diabetes mellitus type 2", 
-                                              "Esophageal cancer", 
-                                              "Hypertensive heart disease", 
-                                              "Ischemic heart disease", 
-                                              "Ischemic stroke", 
-                                              "Liver cancer", 
-                                              "Major depressive disorder", 
-                                              "Malignant skin melanoma", 
-                                              "Multiple myeloma", 
-                                              "Parkinson's disease", 
-                                              "Stomach cancer", 
-                                              "Tracheal, bronchus, and lung cancer", 
-                                              "Uterine cancer"),
-                                  sname = c("ac", "adod", "blc", "bc", "cml", "crc", 
-                                            "kc", "pc", "dmt2", "ec", "hhd", "ihd", 
-                                            "is","lc","mdd", "msm", "mm", "pd", "sc", 
-                                            "tblc", "uc"))
+                                              "Road injuries", 
+                                              "Diabetes mellitus type 2",
+                                              "Stomach cancer",
+                                              "Liver cancer",
+                                              "Alzheimer's disease and other dementias",
+                                              "Cardiovascular diseases",
+                                              "Ischemic heart disease",
+                                              "Stroke",
+                                              "Ischemic stroke",
+                                              "Chronic obstructive pulmonary disease"),
+                                  sname = c("ac","lri", "tblc", "bc", "crc", "ri", "t2d", "sc", "lc",
+                                            "adod", "cd", "ihd", "st", "ist", "copd"))
+                                  
 disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived with Disability)")
+
 
 # ---- chunk-5 ----
 
 ## Data preparation for Dismod/Disbayes
 
-### Get file downloaded from GBD Results Tool
+### Get file dataframe sorted
 
-gbd_input <- read.csv(file="MSLT/data/city regions/bristol/gbd_data_bristol.csv")
+gbd_input <-  data_extracted
 
-gbd_input$location <- as.character(gbd_input$location) # to match with localities characters vector. 
+### Rename columns to drop _name and drop _id columns
 
+names(gbd_input) = gsub(pattern = "_name", replacement = "", x = names(gbd_input))
 
-### Loop to create a raw data set for 2017 for each of the localities to calculate population numbers
+gbd_input <- select(gbd_input,-contains("id"))
+
+### Only keep rows for Local Goverment Area of Interest
+
+gbd_input$location <- as.character(gbd_input$location)
+
+gbd_input <- filter(gbd_input, location %in% localities)
+
+### Loop to create a raw data set for 2017 for each of the localities to calculate population numbers 
 
 gbd_data_localities_raw <- list()
 index <- 1
@@ -115,14 +116,12 @@ for (l in localities){
 }
 
 ## Uncomment to check selection
-## View(gbd_data_localities_raw[[1]]) 
+# View(gbd_data_localities_raw[[1]])
 
-### Calculate population numbers per locality in baseline year (2017), we need this to derive city region population
+## Change to character, otherwise RunLocDf does not work
 
 disease_short_names$disease <- as.character(disease_short_names$disease)
 disease_short_names$sname <- as.character(disease_short_names$sname)
-disease_short_names
-
 
 ### Prepare data set per locality to calculate population numbers (I used lapply, may change for loop)
 
@@ -149,7 +148,7 @@ gbd_Bristol_all_loc$sex <- as.character(gbd_Bristol_all_loc$sex)
 gbd_Bristol_all_loc$sex_age_cat <- paste(gbd_Bristol_all_loc$sex, gbd_Bristol_all_loc$age, sep = "_")
 gbd_Bristol_all_loc <- select(gbd_Bristol_all_loc, -c(age, sex, location, number))
 
-## Create aggregated data frame 
+## Create aggregated data frame (has a warning)
 
 gbd_Bristol <- gbd_Bristol_all_loc %>%
   group_by(sex_age_cat) %>%
@@ -210,16 +209,14 @@ gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
 
 ### Try to use same parameters as those defined in parameters (so all paramters are in the same location and not repeated)
 disease.measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability)")
-disease.name <- c("ac", "adod", "blc", "bc", "cml", "crc",
-              "kc", "pc", "dmt2", "ec", "hhd", "ihd",
-              "is","lc","mdd", "msm", "mm", "pd", "sc",
-              "tblc", "uc")
+disease.name <- c("ac","lri", "tblc", "bc", "crc", "ri", "t2d", "sc", "lc",
+                  "adod", "cd", "ihd", "st", "ist", "copd")
 
 for (dm in disease.measures) {
   for (dn in disease.name) {
 
 
-    # Exclude hdd and incidence and deaths and mdd
+    # Exclude hdd and incidence and deaths and mdd (not included here)
     if((dm == "incidence" && dn == "hhd") || (dm == "deaths" && dn == "mdd" ) ){
       # cat("\n") # Uncomment to see list
     }
@@ -413,7 +410,7 @@ mslt_df <- replace(mslt_df, is.na(mslt_df), 0)
 
 # ---- chunk-6 ---- CODE TO PICK UP DIRECTLY FROM dismod OUTPUT EXCEL, temporarly I copied and paste. Discuss with Alan and Carl
 
-## Use dismod output and add to mslt_df
+## Use dismod output and add to mslt_df (UPDATE)
 
 idata <- read.csv("MSLT/data/city regions/bristol/dismod/idata_test.csv", stringsAsFactors = F)
 
@@ -449,7 +446,7 @@ for (age in i_age_cohort){
 
 # ---- chunk-8 ----
 
-## Use RunDisease 
+## Use RunDisease (Update)
 
 i_disease <- c("is", "ihd", "bc", "uc", "tblc", "crc", "ec", "lc", "kc", "sc", "cml", "mm", "blc", "pc", "msm", "adod", "pd", "dmt2")
 
