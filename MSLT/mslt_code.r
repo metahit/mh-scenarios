@@ -59,13 +59,35 @@ i_age_cohort <- c(22, 27, 32, 37, 42, 47, 52, 57, 62, 67, 72, 77, 82, 87, 92, 97
 i_sex <- c("male", "female")
 
 ### Need to change to match latest dataset (check lower respiratory infections)
+disease_measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability)")
 
-disease_short_names <- data.frame(disease = c("All causes", 
+## Need to make RunLocDf with disease_lname and disease_sname
+
+disease_lname <- c("All causes", 
+                  "Lower respiratory infections",
+                  "Tracheal, bronchus, and lung cancer",
+                  "Breast cancer",
+                  "Colon and rectum cancer",
+                  "Road injuries",
+                  "Diabetes mellitus type 2",
+                  "Stomach cancer",
+                  "Liver cancer",
+                  "Alzheimer's disease and other dementias",
+                  "Cardiovascular diseases",
+                  "Ischemic heart disease",
+                  "Stroke",
+                  "Ischemic stroke",
+                  "Chronic obstructive pulmonary disease")
+
+disease_sname <- c("ac","lri", "tblc", "bc", "crc", "ri", "t2d", "sc", "lc",
+                  "adod", "cd", "ihd", "st", "ist", "copd")
+
+disease_short_names <- data.frame(disease = c("All causes",
                                               "Lower respiratory infections",
                                               "Tracheal, bronchus, and lung cancer",
-                                              "Breast cancer", 
-                                              "Colon and rectum cancer", 
-                                              "Road injuries", 
+                                              "Breast cancer",
+                                              "Colon and rectum cancer",
+                                              "Road injuries",
                                               "Diabetes mellitus type 2",
                                               "Stomach cancer",
                                               "Liver cancer",
@@ -77,7 +99,7 @@ disease_short_names <- data.frame(disease = c("All causes",
                                               "Chronic obstructive pulmonary disease"),
                                   sname = c("ac","lri", "tblc", "bc", "crc", "ri", "t2d", "sc", "lc",
                                             "adod", "cd", "ihd", "st", "ist", "copd"))
-                                  
+#                                   
 disease_measures <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived with Disability)")
 
 
@@ -208,13 +230,10 @@ gbd_df <- gbd_df[order(gbd_df$sex, gbd_df$age_cat),]
 ### diseases. 
 
 ### Try to use same parameters as those defined in parameters (so all paramters are in the same location and not repeated)
-disease.measures <- c("prevalence", "incidence", "deaths", "ylds (years lived with disability)")
-disease.name <- c("ac","lri", "tblc", "bc", "crc", "ri", "t2d", "sc", "lc",
-                  "adod", "cd", "ihd", "st", "ist", "copd")
 
-for (dm in disease.measures) {
-  for (dn in disease.name) {
 
+for (dm in disease_measures) {
+  for (dn in disease_sname) {
 
     # Exclude hdd and incidence and deaths and mdd (not included here)
     if((dm == "incidence" && dn == "hhd") || (dm == "deaths" && dn == "mdd" ) ){
@@ -234,6 +253,9 @@ for (dm in disease.measures) {
 # ------ Write csv file to process in Dismod-------- # TO PROCESS
 
 write_csv(gbd_df, "MSLT/data/city regions/bristol/dismod/input_data.csv")
+
+
+
 
 # ---- chunk 6 ----
 

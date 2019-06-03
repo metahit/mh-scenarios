@@ -144,14 +144,16 @@ write_csv(gbd_Bristol_2017, "MSLT/data/city regions/bristol/test/gbd_Bristol_201
 
 ### Disbayes (Chris Jackson Bayesian Dismod mode, https://chjackson.github.io/disbayes/vignette.html) (this should be in the mslt code)
 
+### test with data base inputs prepared for crc females
+
 # install.packages("rstan")
 
 require(rstan)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-## test ihd example london
-datstan <- c(as.list(ihdlondon), nage=nrow(ihdlondon))
+## test ihd example london (SOME ISSUES HERE WITH THE CRC_FEMALES)
+datstan <- c(as.list(crc_females), nage=nrow(crc_females))
 inits <- list(
   list(cf=rep(0.0101, datstan$nage)),
   list(cf=rep(0.0201, datstan$nage)),
