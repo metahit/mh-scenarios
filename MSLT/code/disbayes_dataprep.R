@@ -84,7 +84,7 @@ for (d_index in i_disease){
       
       # ##Save to rda
       # 
-      save(disbayes_input_list, file = paste("MSLT/data/city regions/bristol/dismod/", d_index, sex_index, ".rda"))
+      save(disbayes_input_list, file = paste("MSLT/data/city regions/bristol/dismod/",d_index, sex_index,".rda"))
       
       index <- index +1
     }
