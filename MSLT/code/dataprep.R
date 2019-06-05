@@ -10,7 +10,9 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## LOOP for all diseases? (data frames for all diseases generated already)
-datstan <- c(as.list(crc_females), nage=nrow(crc_females))
+## Need to fix that I cannot read rds files
+input_disbayes <- read.csv("MSLT/data/city regions/bristol/dismod/tblc_male.csv")
+datstan <- c(as.list(input_disbayes), nage=nrow(input_disbayes))
 inits <- list(
   list(cf=rep(0.0101, datstan$nage)),
   list(cf=rep(0.0201, datstan$nage)),
