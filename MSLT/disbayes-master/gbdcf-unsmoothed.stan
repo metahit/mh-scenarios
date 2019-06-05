@@ -85,3 +85,4 @@ model {
     // They're very similar to prevalences forward-calculated from incidence anyway
     prevn ~ binomial(prevdenom, prev);
 }
+

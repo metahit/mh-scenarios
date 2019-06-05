@@ -102,6 +102,8 @@ disease_short_names <- data.frame(disease = c("All causes",
 #                                   
 disease_measures_list <- list("Prevalence", "Incidence", "Deaths", "YLDs (Years Lived with Disability)")
 
+i_disease <- c("tblc",  "bc", "crc", "dmt2", "sc", "lc", "adod", "ihd", "ist")
+
 
 # ---- chunk-5 ----
 
@@ -543,7 +545,7 @@ for (age in i_age_cohort){
 # lower respiratory infection not processed in dismod
 # copd was not processed in dismod
 
-i_disease <- c("tblc",  "bc", "crc", "dmt2", "sc", "lc", "adod", "ihd", "ist")
+
 
 
 disease_life_table_list_bl <- list()

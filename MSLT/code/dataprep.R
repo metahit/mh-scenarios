@@ -9,7 +9,7 @@ require(rstan)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-## test ihd example london (SOME ISSUES HERE WITH THE CRC_FEMALES)
+## LOOP for all diseases? (data frames for all diseases generated already)
 datstan <- c(as.list(crc_females), nage=nrow(crc_females))
 inits <- list(
   list(cf=rep(0.0101, datstan$nage)),

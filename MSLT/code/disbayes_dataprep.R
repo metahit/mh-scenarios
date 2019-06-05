@@ -3,85 +3,94 @@
 library(devtools)
 
 ## Belen Comments: 
+## The code below generates age, sex and disease specific data frames to process with disbayes. 
+## Input data is generated with script in mslt_code.r (may be best to have all data prep in one script or all in mslt_code. r)
 
-## start with one disease, then do a loop for all diseases by age and sex.  
-## example for crc (colon and rectum cancer) for females.
-## I commented script lines from the original CJ script that I did not use. 
-inputs <- read.csv("MSLT/data/city regions/bristol/dismod/input_data.csv", nrow=20, header=TRUE)[,c('age', 'incidence_rate_crc', 
-                                                                                                    'deaths_rate_crc', 
-                                                                                                    'prevalence_rate_crc', 
-                                                                                                    'population_number')]
-# mort <- read.csv("MSLT/data/city regions/bristol/dismod/input_data.csv", nrow=20, header=TRUE)[,c('sex', 'age', 'deaths_rate_crc')]
-# prev <- read.csv("MSLT/data/city regions/bristol/dismod/input_data.csv", nrow=20, header=TRUE)[,c('sex', 'age', 'prevalence_rate_crc')]
-# pop <- read.csv("MSLT/data/city regions/bristol/dismod/input_data.csv", nrow=20, header=TRUE)[,c('sex', 'age', 'population_number')]
-# names(inc) <- c("agegrp","incmale","incfemale")
-# names(mort) <- c("mortmale","mortfemale")
-# # names(prev) <- c("prevmale","prevfemale")
-# # names(pop) <- c("popmale","popfemale")
-# inputs <- cbind(inc, prev, mort, pop)
-# # inputs$remmale <- 0
-inputs$rem <- 0
+in_data <- read.csv("MSLT/data/city regions/bristol/dismod/input_data.csv")
+disbayes_input_list <- list()
+index <- 1
 
-## Belen comment: do we need to change this to adjust to the Bristol populatoin?
+for (d_index in i_disease) {
+  for (sex_index in i_sex){
+    
+    var_name <- paste0("rate_", d_index)
 
-inputs$prevdenom <- c(100,100,500,500,500,500,500,500,500,500,500,500,500,500,500,500,200,200,100,100) / 10 # total sample size 3910, generous for London (from CJ)
-## Added age group (Belen)
-inputs$agegrp <- as.integer(seq(0,95, by=5))
+    disbayes_input_list[[index]] <- filter(in_data, sex == sex_index) %>% select(age, sex, ends_with(var_name), population_number)
+    
+    ## Add column to show disease
+    
+    disbayes_input_list[[index]]$disease <- d_index
+    
+    ## Change column names to match disbayes code
+    
+    colnames(disbayes_input_list[[index]])[colnames(disbayes_input_list[[index]])== paste0("incidence_rate_", d_index)] <- "inc"
+    colnames(disbayes_input_list[[index]])[colnames(disbayes_input_list[[index]])== paste0("deaths_rate_", d_index)] <- "mort"
+    colnames(disbayes_input_list[[index]])[colnames(disbayes_input_list[[index]])== paste0("prevalence_rate_", d_index)] <- "prev"
+    colnames(disbayes_input_list[[index]])[colnames(disbayes_input_list[[index]])== paste0("population_number")] <- "pop"
+    
+    ## We assume remission is 0 
+    
+    disbayes_input_list[[index]]$rem <- 0
+    
+    ## create denominator for disbayes code
+    
+    disbayes_input_list[[index]]$prevdenom <- c(100,100,500,500,500,500,500,500,500,500,500,500,500,500,500,500,200,200,100,100) / 10 # total sample size 3910, generous for London (from CJ)
+    
+    ## Added agegroups to derive age groups by 1
+    
+    disbayes_input_list[[index]]$agegrp <- as.integer(seq(0,95, by=5))
+    
+    ## Replace 0 with small numbers for incidence, otherwise, disbayes does not work.
+    
+    disbayes_input_list[[index]]$inc <- ifelse(disbayes_input_list[[index]]$inc  == 0, 1e-08, disbayes_input_list[[index]]$inc)
+    
+
+    ## Convert 5 year data file to 100 year age intervals    
+    
+    
+    outage <- 0:100  # assume inc/prev/mort same in each year within a five-year age group
+    ind <- findInterval(outage, disbayes_input_list[[index]]$agegr)
+    disbayes_input_list[[index]] <- disbayes_input_list[[index]][ind,]
+    disbayes_input_list[[index]]$age <- outage
+    
+    disbayes_input_list[[index]] <- within(disbayes_input_list[[index]], {
+      ningrp <- rep(table(agegrp), table(agegrp))
+      # popmale <- round(popmale/ningrp) ## assume population uniform between years within age group.
+      pop <- round(pop/ningrp) ## assume population uniform between years within age group.
+      # ndieddismale <- round(popmale * (1 - exp(-mortmale)))
+      ndieddis <- round(pop * (1 - exp(-mort)))
+      # prevnmale <- round(prevdenom * prevmale)
+      prevn <- round(prevdenom * prev)
+    })
+    
+    
+
+    index <-  index +1
+    
+    
+  }
+}
 
 
-## change column name incidence_rate_crc to inc to match disbayes code
-## try to change this hard code
+## Loop to save each data frame within disbayes_list
 
-colnames(inputs)[colnames(inputs)=="incidence_rate_crc"] <- "inc"
-colnames(inputs)[colnames(inputs)=="prevalence_rate_crc"] <- "prev"
-colnames(inputs)[colnames(inputs)=="deaths_rate_crc"] <- "mort"
-colnames(inputs)[colnames(inputs)=="population_number"] <- "pop"
+index <- 1 
 
-## If incidence == 0, give a tiny number
-
-## Stretch data from 5-year age groups to by year of age 
-outage <- 0:100  # assume inc/prev/mort same in each year within a five-year age group
-ind <- findInterval(outage, inputs$agegr)
-inputs <- inputs[ind,]
-inputs$age <- outage
-
-
-
-View(inputs)
-
-## Adjusted do create data base for females only
+for (d_index in i_disease){
+    for (sex_index in i_sex){
+      
+      ##Save to csv
+      write_csv(disbayes_input_list[[index]], paste("MSLT/data/city regions/bristol/dismod/", d_index, "_", sex_index, ".csv"))
+      
+      # ##Save to rda
+      # 
+      # save(disbayes_input_list, file = paste("MSLT/data/city regions/bristol/dismod/", d_index, "_", sex_index, ".rda"))
+      
+      index <- index +1
+    }
+}
 
 
-inputs <- within(inputs, {
-    ningrp <- rep(table(agegrp), table(agegrp))
-    # popmale <- round(popmale/ningrp) ## assume population uniform between years within age group.
-    pop <- round(pop/ningrp) ## assume population uniform between years within age group.
-    # ndieddismale <- round(popmale * (1 - exp(-mortmale)))
-    ndieddis <- round(pop * (1 - exp(-mort)))
-    # prevnmale <- round(prevdenom * prevmale)
-    prevn <- round(prevdenom * prev)
-})
-
-crc_females <- inputs
-
-crc_females$inc[1:15] <- 1e-08
-
-save(inputs, file="MSLT/data/city regions/bristol/dismod/crc_females.rda")
-
-View(crc_females)
-
-
-### Checking differences to try to find out why crc_females is not working with CJ stan developments. 
-class(crc_females)
-class(ihdlondon)
-typeof(crc_females)
-typeof(ihdlondon)
-length(crc_females)
-length(ihdlondon)
-
-## Belen: Difference in column increments (column 0 in data frame, does this have anything to do with it?). 
-attributes(crc_females)
-attributes(ihdlondon)
 
 ### Belen: I have not done anything with the below code
 
