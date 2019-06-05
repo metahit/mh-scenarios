@@ -48,10 +48,10 @@ gbd_df <- NULL
 for (ag in 1:length(unique(i_data$age))){
   for (gender in c("Male", "Female")){
     age_sex_df <- NULL
-    for (dm in 1:length(disease_measures)){
+    for (dm in 1:length(disease_measures_list)){
       for (d in 1:nrow(disease_short_names)){
         dn <- disease_short_names$disease[d]
-        dmeasure <- disease_measures[dm] %>% as.character()
+        dmeasure <- disease_measures_list[dm] %>% as.character()
         # gender <- "Male"
  
         agroup <- unique(i_data$age)[ag]
