@@ -74,7 +74,7 @@ transformed parameters {
 model {
     // Prior for case fatality 
     for (a in 1:nage){
-      cf[a] ~ exponential(1);
+	cf[a] ~ exponential(1); // gamma(0.1, 10); // Why does it not converge with the gamma prior?// BZ: changed to expoential
     }
 
     // Statistical model for number of people dying from IHD at each age
@@ -85,4 +85,3 @@ model {
     // They're very similar to prevalences forward-calculated from incidence anyway
     prevn ~ binomial(prevdenom, prev);
 }
-

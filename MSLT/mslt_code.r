@@ -14,8 +14,7 @@
 # For the UK (GBD Ref): For the UK the analyses is by Local Administrative Area (level 6 in GBD hierarchy). 
 # Do a set of Dismod outputs with remission for cancers to test the difference in results. 
 # use yml to define variables to facilitate reuse of code. See Carls suggestions.config.yml
-
-
+# Get all data from the GBD
 getwd()
 # Change to own wd
 
@@ -502,8 +501,9 @@ mslt_df <- replace(mslt_df, is.na(mslt_df), 0)
 # ---- chunk-6 ---- CODE TO PICK UP DIRECTLY FROM dismod OUTPUT EXCEL, temporarly I copied and paste. Discuss with Alan and Carl
 
 ## Use dismod output and add to mslt_df (UPDATE)
+## using Overall English data only for ihd, is, dm, bc and cc to show how it works to Carl and Alan
 
-idata <- read.csv("MSLT/data/city regions/bristol/dismod/idata_test.csv", stringsAsFactors = F)
+idata <- read.csv("MSLT/legacy/legacy/UK/idata.csv", stringsAsFactors = F)
 
 # Add age_sex category to match with mslt_df
 
@@ -545,8 +545,19 @@ for (age in i_age_cohort){
 # lower respiratory infection not processed in dismod
 # copd was not processed in dismod
 
+## Redefine in_disease here for example for Carl and Alan
+
+in_disease <- c("ihd", "is", "dm", "cc", "bc")
+
+## Change some names to match above diseases (just to show works)
 
 
+names(mslt_df)[names(mslt_df) == "dw_adj_crc"] <- "dw_adj_cc"
+names(mslt_df)[names(mslt_df) == "dw_adj_ist"] <- "dw_adj_is"
+
+mslt_df <- select(mslt_df,-contains("lri", "tblc", "ri", "sc", "lc", "adod", "st", "copd"))
+
+mslt_df <- mslt_df[ -c(dw_adj_lri) ]
 
 disease_life_table_list_bl <- list()
 index <- 1

@@ -80,17 +80,21 @@ for (d_index in i_disease){
     for (sex_index in i_sex){
       
       ##Save to csv
-      write_csv(disbayes_input_list[[index]], paste("MSLT/data/city regions/bristol/dismod/", d_index, "_", sex_index, ".csv", sep = ""))
+      write_csv(disbayes_input_list[[index]], paste("MSLT/data/city regions/bristol/dismod/input/", d_index, "_", sex_index, ".csv", sep = ""))
       
       # ##Save to rda
       # 
-      save(disbayes_input_list, file = paste("MSLT/data/city regions/bristol/dismod/",d_index, sex_index,".rda", sep = ""))
+      save(disbayes_input_list, file = paste("MSLT/data/city regions/bristol/dismod/input/",d_index, sex_index,".rda", sep = ""))
       
       index <- index +1
     }
 }
 
-input_test <- readr::read_rds("MSLT/data/city regions/bristol/dismod/adodfemale.rda")
+input_test <- data.frame(read.csv("MSLT/data/city regions/bristol/dismod/adod_female.csv"))
+
+getwd()
+
+
 
 getwd()
 
