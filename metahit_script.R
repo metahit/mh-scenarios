@@ -22,7 +22,7 @@ PATH_TO_LOCAL_DATA <- 'data/'
 NSAMPLES <- 1
 MMET_CYCLING <- 4.63
 MMET_WALKING <- 2.53
-PM_CONC_BASE <- 10 
+#PM_CONC_BASE <- 10 
 PM_TRANS_SHARE <- 0.225
 PA_DOSE_RESPONSE_QUANTILE <- F
 AP_DOSE_RESPONSE_QUANTILE <- F
@@ -169,6 +169,9 @@ for (i in 1:length(list_of_files)){
          readr::read_csv(list_of_files[[i]],col_types = cols()),
          pos = 1)
 }
+
+background_pollution <- read.csv('../mh-air-pollution/02_DataCreated/1_apmeans.csv')
+PM_CONC_BASE <- background_pollution$apmean_bpm25[grepl(CITY,tolower(background_pollution$apgroup_name))]
 
 #####################################################################
 ## these datasets are all local, saved in local folder.
