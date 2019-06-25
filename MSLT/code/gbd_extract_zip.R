@@ -1,8 +1,8 @@
+#Created in February-March 2019 by Marko Tainio (modified by Belen Zapata June 2019 for Metahit project)
+
 #This script extracts required Global Burden of Disease data from the zip files
 #by first extracting zip-files, then reading csv file, adding required data to combined dataframe
 #and finally deleiting extracted files. Resulting dataframe is then saved as csv-file.
-
-#Created in February-March 2019 by Marko Tainio (modified by Belen Zapata June 2019 for Metahit project)
 
 #Defining folder where the data is (stored externally in my dropbox as the GBD files are large)
 data_folder <- "C:/Users/e95517/Dropbox/Collaborations/James Woodcock/Metahit/Data/GBD2017"
