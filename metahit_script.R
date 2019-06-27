@@ -472,6 +472,7 @@ names(injuries) <- c('dem_index','Deaths','scenario')
 (deaths_yll_injuries <- injury_death_to_yll(injuries))
 # store reference number of deaths and ylls
 ref_injuries <- deaths_yll_injuries$ref_injuries
+##TODO report by mode. covert to burden. then sum.
 
 
 #####################################################################
