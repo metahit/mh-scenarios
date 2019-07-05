@@ -213,5 +213,5 @@ for(j in 1:length(lahomelist$lad14cd)){
   
   # Save dataset
   saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", paste0("SPind_", lahome, "_subdivide.Rds")),version=2)
-  print(paste0("Scenario run for home LA ",lahome, " and mode ", mode, " at ",Sys.time()))
+  print(paste0("Scenario run for home LA ",lahome, " at ",Sys.time()))
 }
