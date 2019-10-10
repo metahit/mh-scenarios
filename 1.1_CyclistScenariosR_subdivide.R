@@ -148,7 +148,8 @@ for(j in 1:length(lahomelist$lad14cd)){
   sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
   
   # Define distance categories for applying matrices
-  sp$distcat <-as.numeric(cut(sp$trip_distraw_km, c(0,5,15,40,100), labels=c(1:4)))
+  sp$distcat <-as.numeric(cut(sp$trip_distraw_km, c(-0.1,5,15,40,100000), labels=c(1:4)))
+  sp$distcat[is.na(sp$trip_distraw_km)] <- NA
   sp$distcat[sp$trip_mainmode_det>=1 & sp$trip_mainmode_det<=2] <- 1 # walk at most level 1
   sp$distcat[sp$distcat==4 & sp$trip_mainmode_det==3] <- 3 # bike at most level 3
   sp$distcat[sp$distcat==4 & sp$trip_mainmode_det>=18 & sp$trip_mainmode_det<=20] <- 3 # bus at most level 3
