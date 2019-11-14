@@ -3,8 +3,6 @@ rm(list = ls())
 library(foreign)
 library(tidyverse)
 memory.limit(size=1000000)
-source("0_Functions.R")
-
 
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
@@ -16,7 +14,7 @@ for(j in 1:length(lad14$lad14cd)){
   lahome <- as.character(lad14$lad14cd[j])
   lafull <- as.numeric(lad14$lahome[j])
   sp <-read.dta(paste0("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_", lahome, ".dta"))
-  sp <- sp[1:10000,]
+  #sp <- sp[1:10000,]
   distspeed <- read.csv("1_InputData/2_OtherInput/NTS_distance_speed.csv")
 
   # Convert minutes to hours
@@ -97,9 +95,9 @@ for(j in 1:length(lad14$lad14cd)){
     sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_lsoa", "home_laname", "home_gor", "urban", "urbanmatch", "female", "agecat_det", "demogindex", "zerotrips", "sport_wkmmets")])
   }
   if(lafull==0) {
-    sp$census_id <- sp$demogindex 
+    sp$census_id <- (sp$urbanmatch*1000)+(sp$demogindex)
     sp_ind <- unique(sp[,names(sp) %in% c("census_id", "urbanmatch", "female", "agecat_det", "demogindex")])
-  }
+  } 
   
   # Distance + Duration summaries by mode, baseline + scenario
   sp$trip_cardrivedist_km  <- sp$trip_distraw_km
@@ -169,45 +167,45 @@ for(j in 1:length(lad14$lad14cd)){
   } else {
     sp$distcat_cycle[sp$trip_mainmode_det!=3] <- 1 # cycle at most level 1 if in a baseline multimodal trip
   }
-    
-    
+  
   # Function to aggregate to individual level
   agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata, weight, cycle = F, numdistcat = 1){
    if (numdistcat==1) {
-     trip_level_dataset$variable <- trip_level_dataset[variable] * trip_level_dataset[weight]
-     df <- trip_level_dataset %>% group_by(census_id) %>% summarise (total = sum(variable))
+     trip_level_dataset$variable1 <- trip_level_dataset[variable] * trip_level_dataset[weight]
+     trip_level_dataset$variable1[is.na(trip_level_dataset$variable1),] <- 0
+     df <- trip_level_dataset %>% group_by(census_id) %>% summarise (total = sum(variable1))
      names(df)[2] <- aggregatedata
-  } else {
-   trip_level_dataset$variable_d1 <- trip_level_dataset[variable] * trip_level_dataset[weight]
-   trip_level_dataset$variable_d2 <- trip_level_dataset[variable] * trip_level_dataset[weight]
-   trip_level_dataset$variable_d3 <- trip_level_dataset[variable] * trip_level_dataset[weight]
-   trip_level_dataset$variable_d4 <- trip_level_dataset[variable] * trip_level_dataset[weight]
-   if (cycle==F) {
-      trip_level_dataset$variable_d1[trip_level_dataset$distcat!=1,] <- 0
-      trip_level_dataset$variable_d2[trip_level_dataset$distcat!=2,] <- 0    
-      trip_level_dataset$variable_d3[trip_level_dataset$distcat!=3,] <- 0    
-      trip_level_dataset$variable_d4[trip_level_dataset$distcat!=4,] <- 0
     } else {
-      trip_level_dataset$variable_d1[trip_level_dataset$distcat_cycle!=1,] <- 0
-      trip_level_dataset$variable_d2[trip_level_dataset$distcat_cycle!=2,] <- 0    
-      trip_level_dataset$variable_d3[trip_level_dataset$distcat_cycle!=3,] <- 0    
-    }
-      df_d1 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d1))
-      names(df_d1)[2] <- paste0(aggregatedata,"_d1")
-      df_d2 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d2))
-      names(df_d2)[2] <- paste0(aggregatedata,"_d2")
-      df_d3 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d3))
-      names(df_d3)[2] <- paste0(aggregatedata,"_d3")
-      df12 <- full_join(df_d1, df_d2, by="census_id")
-      if (numdistcat==3) {
-      df <- full_join(df12, df_d3, by="census_id")
-       } else {
-      df_d4 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d4))
-      names(df_d4)[2] <- paste0(aggregatedata,"_d4")
-      df34 <- full_join(df_d3, df_d4, by="census_id")
-      df <- full_join(df12, df34, by="census_id")
-     }
-    }
+     trip_level_dataset$variable_d1 <- trip_level_dataset[variable] * trip_level_dataset[weight]
+     trip_level_dataset$variable_d2 <- trip_level_dataset[variable] * trip_level_dataset[weight]
+     trip_level_dataset$variable_d3 <- trip_level_dataset[variable] * trip_level_dataset[weight]
+     trip_level_dataset$variable_d4 <- trip_level_dataset[variable] * trip_level_dataset[weight]
+     if (cycle==F) {
+        trip_level_dataset$variable_d1[trip_level_dataset$distcat!=1 | is.na(trip_level_dataset$variable_d1),] <- 0
+        trip_level_dataset$variable_d2[trip_level_dataset$distcat!=2 | is.na(trip_level_dataset$variable_d2),] <- 0    
+        trip_level_dataset$variable_d3[trip_level_dataset$distcat!=3 | is.na(trip_level_dataset$variable_d3),] <- 0    
+        trip_level_dataset$variable_d4[trip_level_dataset$distcat!=4 | is.na(trip_level_dataset$variable_d4),] <- 0
+      } else {
+        trip_level_dataset$variable_d1[trip_level_dataset$distcat_cycle!=1 | is.na(trip_level_dataset$variable_d1),] <- 0
+        trip_level_dataset$variable_d2[trip_level_dataset$distcat_cycle!=2 | is.na(trip_level_dataset$variable_d2),] <- 0    
+        trip_level_dataset$variable_d3[trip_level_dataset$distcat_cycle!=3 | is.na(trip_level_dataset$variable_d3),] <- 0    
+      }
+        df_d1 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d1))
+        names(df_d1)[2] <- paste0(aggregatedata,"_d1")
+        df_d2 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d2))
+        names(df_d2)[2] <- paste0(aggregatedata,"_d2")
+        df_d3 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d3))
+        names(df_d3)[2] <- paste0(aggregatedata,"_d3")
+        df12 <- full_join(df_d1, df_d2, by="census_id")
+        if (numdistcat==3) {
+        df <- full_join(df12, df_d3, by="census_id")
+         } else {
+        df_d4 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d4))
+        names(df_d4)[2] <- paste0(aggregatedata,"_d4")
+        df34 <- full_join(df_d3, df_d4, by="census_id")
+        df <- full_join(df12, df34, by="census_id")
+       }
+      }
     df[is.na(df)] <- 0
     individual_dataset <- left_join(individual_dataset, df, by="census_id")
     individual_dataset  
