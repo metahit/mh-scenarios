@@ -4,7 +4,7 @@ E06000002,Middlesbrough,0,1
 E06000003,Redcar and Cleveland,0,1
 E06000004,Stockton-on-Tees,0,1
 E06000005,Darlington,0,1
-E06000006,Halton,0,1
+E06000006,Halton,1,1
 E06000007,Warrington,0,1
 E06000008,Blackburn with Darwen,0,1
 E06000009,Blackpool,0,1
@@ -16,7 +16,7 @@ E06000014,York,0,1
 E06000015,Derby,0,1
 E06000016,Leicester,0,1
 E06000017,Rutland,0,1
-E06000018,Nottingham,0,1
+E06000018,Nottingham,1,1
 E06000019,"Herefordshire, County of",0,1
 E06000020,Telford and Wrekin,0,1
 E06000021,Stoke-on-Trent,0,1
@@ -45,7 +45,7 @@ E06000043,Brighton and Hove,0,1
 E06000044,Portsmouth,0,1
 E06000045,Southampton,0,1
 E06000046,Isle of Wight,0,1
-E06000047,County Durham,0,1
+E06000047,County Durham,1,1
 E06000049,Cheshire East,0,1
 E06000050,Cheshire West and Chester,0,1
 E06000051,Shropshire,0,1
@@ -53,7 +53,7 @@ E06000052,"Cornwall, Isles of Scilly",0,1
 E06000054,Wiltshire,0,1
 E06000055,Bedford,0,1
 E06000056,Central Bedfordshire,0,1
-E06000057,Northumberland,0,1
+E06000057,Northumberland,1,1
 E07000004,Aylesbury Vale,0,1
 E07000005,Chiltern,0,1
 E07000006,South Bucks,0,1
@@ -190,13 +190,13 @@ E07000166,Richmondshire,0,1
 E07000167,Ryedale,0,1
 E07000168,Scarborough,0,1
 E07000169,Selby,0,1
-E07000170,Ashfield,0,1
-E07000171,Bassetlaw,0,1
-E07000172,Broxtowe,0,1
-E07000173,Gedling,0,1
-E07000174,Mansfield,0,1
-E07000175,Newark and Sherwood,0,1
-E07000176,Rushcliffe,0,1
+E07000170,Ashfield,1,1
+E07000171,Bassetlaw,1,1
+E07000172,Broxtowe,1,1
+E07000173,Gedling,1,1
+E07000174,Mansfield,1,1
+E07000175,Newark and Sherwood,1,1
+E07000176,Rushcliffe,1,1
 E07000177,Cherwell,0,1
 E07000178,Oxford,0,1
 E07000179,South Oxfordshire,0,1
@@ -255,71 +255,71 @@ E07000240,St Albans,0,1
 E07000241,Welwyn Hatfield,0,1
 E07000242,East Hertfordshire,0,1
 E07000243,Stevenage,0,1
-E08000001,Bolton,0,1
-E08000002,Bury,0,1
-E08000003,Manchester,0,1
-E08000004,Oldham,0,1
-E08000005,Rochdale,0,1
-E08000006,Salford,0,1
-E08000007,Stockport,0,1
-E08000008,Tameside,0,1
-E08000009,Trafford,0,1
-E08000010,Wigan,0,1
-E08000011,Knowsley,0,1
-E08000012,Liverpool,0,1
-E08000013,St. Helens,0,1
-E08000014,Sefton,0,1
-E08000015,Wirral,0,1
-E08000016,Barnsley,0,1
-E08000017,Doncaster,0,1
-E08000018,Rotherham,0,1
-E08000019,Sheffield,0,1
-E08000021,Newcastle upon Tyne,0,1
-E08000022,North Tyneside,0,1
-E08000023,South Tyneside,0,1
-E08000024,Sunderland,0,1
-E08000025,Birmingham,0,1
-E08000026,Coventry,0,1
-E08000027,Dudley,0,1
-E08000028,Sandwell,0,1
-E08000029,Solihull,0,1
-E08000030,Walsall,0,1
-E08000031,Wolverhampton,0,1
-E08000032,Bradford,0,1
-E08000033,Calderdale,0,1
-E08000034,Kirklees,0,1
-E08000035,Leeds,0,1
-E08000036,Wakefield,0,1
-E08000037,Gateshead,0,1
-E09000002,Barking and Dagenham,0,1
-E09000003,Barnet,0,1
-E09000004,Bexley,0,1
-E09000005,Brent,0,1
-E09000006,Bromley,0,1
-E09000007,Camden,0,1
-E09000008,Croydon,0,1
-E09000009,Ealing,0,1
-E09000010,Enfield,0,1
-E09000011,Greenwich,0,1
-E09000012,Hackney,0,1
-E09000013,Hammersmith and Fulham,0,1
-E09000014,Haringey,0,1
-E09000015,Harrow,0,1
-E09000016,Havering,0,1
-E09000017,Hillingdon,0,1
-E09000018,Hounslow,0,1
-E09000019,Islington,0,1
-E09000020,Kensington and Chelsea,0,1
-E09000021,Kingston upon Thames,0,1
-E09000022,Lambeth,0,1
-E09000023,Lewisham,0,1
-E09000024,Merton,0,1
-E09000025,Newham,0,1
-E09000026,Redbridge,0,1
-E09000027,Richmond upon Thames,0,1
-E09000028,Southwark,0,1
-E09000029,Sutton,0,1
-E09000030,Tower Hamlets,0,1
-E09000031,Waltham Forest,0,1
-E09000032,Wandsworth,0,1
-E09000033,"Westminster, City of London",0,1
+E08000001,Bolton,1,1
+E08000002,Bury,1,1
+E08000003,Manchester,1,1
+E08000004,Oldham,1,1
+E08000005,Rochdale,1,1
+E08000006,Salford,1,1
+E08000007,Stockport,1,1
+E08000008,Tameside,1,1
+E08000009,Trafford,1,1
+E08000010,Wigan,1,1
+E08000011,Knowsley,1,1
+E08000012,Liverpool,1,1
+E08000013,St. Helens,1,1
+E08000014,Sefton,1,1
+E08000015,Wirral,1,1
+E08000016,Barnsley,1,1
+E08000017,Doncaster,1,1
+E08000018,Rotherham,1,1
+E08000019,Sheffield,1,1
+E08000021,Newcastle upon Tyne,1,1
+E08000022,North Tyneside,1,1
+E08000023,South Tyneside,1,1
+E08000024,Sunderland,1,1
+E08000025,Birmingham,1,1
+E08000026,Coventry,1,1
+E08000027,Dudley,1,1
+E08000028,Sandwell,1,1
+E08000029,Solihull,1,1
+E08000030,Walsall,1,1
+E08000031,Wolverhampton,1,1
+E08000032,Bradford,1,1
+E08000033,Calderdale,1,1
+E08000034,Kirklees,1,1
+E08000035,Leeds,1,1
+E08000036,Wakefield,1,1
+E08000037,Gateshead,1,1
+E09000002,Barking and Dagenham,1,1
+E09000003,Barnet,1,1
+E09000004,Bexley,1,1
+E09000005,Brent,1,1
+E09000006,Bromley,1,1
+E09000007,Camden,1,1
+E09000008,Croydon,1,1
+E09000009,Ealing,1,1
+E09000010,Enfield,1,1
+E09000011,Greenwich,1,1
+E09000012,Hackney,1,1
+E09000013,Hammersmith and Fulham,1,1
+E09000014,Haringey,1,1
+E09000015,Harrow,1,1
+E09000016,Havering,1,1
+E09000017,Hillingdon,1,1
+E09000018,Hounslow,1,1
+E09000019,Islington,1,1
+E09000020,Kensington and Chelsea,1,1
+E09000021,Kingston upon Thames,1,1
+E09000022,Lambeth,1,1
+E09000023,Lewisham,1,1
+E09000024,Merton,1,1
+E09000025,Newham,1,1
+E09000026,Redbridge,1,1
+E09000027,Richmond upon Thames,1,1
+E09000028,Southwark,1,1
+E09000029,Sutton,1,1
+E09000030,Tower Hamlets,1,1
+E09000031,Waltham Forest,1,1
+E09000032,Wandsworth,1,1
+E09000033,"Westminster, City of London",1,1
