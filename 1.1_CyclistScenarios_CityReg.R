@@ -259,8 +259,8 @@ for(j in 1:length(lad14$lad14cd)){
   if(lafull==1) {
     saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", paste0("SPind_", lahome, ".Rds")),version=2)
   } else {
-    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", paste0("SPind_", lahome, "_mini.Rds")),version=2)
+    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini", paste0("SPind_", lahome, ".Rds")),version=2)
   }
     
-  print(paste0("Scenario run for home LA ",lahome, " at ",Sys.time()))
+  print(paste0("Scenario run for home LA ",lahome, " (", j , ") at ",Sys.time()))
 }
