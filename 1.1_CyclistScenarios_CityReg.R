@@ -39,8 +39,11 @@ for(j in 1:length(lad14$lad14cd)){
   
   sp$pcyclist_scen <- exp(sp$logpcyclist_scen) / (1 + (exp(sp$logpcyclist_scen)))
   
-  # How many cyclists to switch?
+  # How many cyclists to switch? (none if mode share already higher)
   nextracyclist <- round((targetpcycle * length(unique(sp$census_id))) - length(unique(sp$census_id[sp$cyclist==1])))
+  if(nextracyclist<0) {
+    nextracyclist <- 0
+  }
   
   # Randomly turn N=sp$nextracyclist non-cyclists to new cyclists, with weight equal to sp$pcyclist_scen
   sp$scen_newcyclist <- 0
