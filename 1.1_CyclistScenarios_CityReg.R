@@ -115,6 +115,11 @@ for(j in 1:length(lad14$lad14cd)){
   sp$trip_busdist_km[!(sp$trip_mainmode_det %in% c(18:20))]  <- 0
   sp$trip_taxidist_km  <- sp$trip_distraw_km
   sp$trip_taxidist_km[!(sp$trip_mainmode_det %in% c(26:27))]  <- 0
+  sp$trip_vandrivedist_km  <- sp$trip_distraw_km
+  sp$trip_vandrivedist_km[!(sp$trip_mainmode_det %in% c(13:14))]  <- 0
+  sp$trip_vanpassdist_km  <- sp$trip_distraw_km
+  sp$trip_vanpassdist_km[!(sp$trip_mainmode_det %in% c(15:16))]  <- 0
+  
   
   sp$trip_cartime_hr  <- sp$trip_durationraw_hr
   sp$trip_cartime_hr[!(sp$trip_mainmode_det %in% c(5:8))]  <- 0
@@ -128,6 +133,8 @@ for(j in 1:length(lad14$lad14cd)){
   sp$trip_traintime_hr[!(sp$trip_mainmode_det %in% c(23:24))]  <- 0
   sp$trip_taxitime_hr  <- sp$trip_durationraw_hr
   sp$trip_taxitime_hr[!(sp$trip_mainmode_det %in% c(26:27))]  <- 0
+  sp$trip_vantime_hr  <- sp$trip_durationraw_hr
+  sp$trip_vantime_hr[!(sp$trip_mainmode_det %in% c(13:16))]  <- 0
   
   if(lafull==1) {
   sp$scen_trip_cardrivedist_km  <- sp$trip_distraw_km
@@ -142,6 +149,10 @@ for(j in 1:length(lad14$lad14cd)){
   sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
   sp$scen_trip_taxidist_km  <- sp$trip_distraw_km
   sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
+  sp$scen_trip_vandrivedist_km  <- sp$trip_distraw_km
+  sp$scen_trip_vandrivedist_km[!(sp$scen_trip_mainmode_det %in% c(13:14))]  <- 0
+  sp$scen_trip_vanpassdist_km  <- sp$trip_distraw_km
+  sp$scen_trip_vanpassdist_km[!(sp$scen_trip_mainmode_det %in% c(15:16))]  <- 0
   
   sp$scen_trip_cartime_hr  <- sp$scen_trip_durationraw_hr
   sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode_det %in% c(5:8))]  <- 0
@@ -155,6 +166,8 @@ for(j in 1:length(lad14$lad14cd)){
   sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode_det %in% c(23:24))]  <- 0
   sp$scen_trip_taxitime_hr  <- sp$scen_trip_durationraw_hr
   sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
+  sp$scen_trip_vantime_hr  <- sp$scen_trip_durationraw_hr
+  sp$scen_trip_vantime_hr[!(sp$scen_trip_mainmode_det %in% c(13:16))]  <- 0
   }
   
   # Define distance categories for applying matrices
@@ -223,7 +236,9 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikepassdist_km', 'base_mbikepass_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_busdist_km', 'base_bus_wkkm', 'weight_tripXhh_rts', numdistcat = 3)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxidist_km', 'base_taxi_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
-
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_vandrivedist_km', 'base_vandrive_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_vanpassdist_km', 'base_vanpass_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
+  
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walktime_hr', 'base_walk_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycletime_hr', 'base_cycle_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cartime_hr', 'base_car_wkhr', 'weight_tripXhh_rts')
@@ -232,6 +247,7 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_tubetime_hr', 'base_tube_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_traintime_hr', 'base_train_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_taxitime_hr', 'base_taxi_wkhr', 'weight_tripXhh_rts')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_vantime_hr', 'base_van_wkhr', 'weight_tripXhh_rts')
   
   # Scenario distance 
   if(lafull==1) {
@@ -243,6 +259,8 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikepassdist_km', 'scen_mbikepass_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_busdist_km', 'scen_bus_wkkm', 'weight_tripXhh_rts', numdistcat = 3)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxidist_km', 'scen_taxi_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vandrivedist_km', 'scen_vandrive_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vanpassdist_km', 'scen_vanpass_wkkm', 'weight_tripXhh_rts', numdistcat = 4)
   
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr', 'weight_tripXhh_rts')
@@ -252,6 +270,7 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_tubetime_hr', 'scen_tube_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_traintime_hr', 'scen_train_wkhr', 'weight_tripXhh_rts')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxitime_hr', 'scen_taxi_wkhr', 'weight_tripXhh_rts')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vantime_hr', 'scen_van_wkhr', 'weight_tripXhh_rts')
   }
   
   # Marginal METs per week, individual [not created her as met_cycle/walk random variables]
