@@ -14,7 +14,7 @@ cityregion <- lad14[,c("lad14cd", "cityregion")]
 
 for(j in 1:length(lad14$lad14cd)){
   lahome <- as.character(lad14$lad14cd[j])
-  lafull <- as.numeric(lad14$lahome[j])
+  lafull <- as.numeric(lad14$lahome[j]) ## doing city region ones in full
   sp <-read.dta(paste0("1_InputData/1_LA14trip-level/SPtrip_CensusNTSAPS_", lahome, ".dta"))
   #sp <- sp[1:10000,]
   distspeed <- read.csv("1_InputData/2_OtherInput/NTS_distance_speed.csv")
