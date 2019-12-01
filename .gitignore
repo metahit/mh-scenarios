@@ -5,7 +5,7 @@
 .Ruserdata
 
 # Safe guarded datasets
-1_InputData/1_LA14trip-level/**
+1_InputData/1_LA14trip-level**
 
 # Anna drafts
 x-drafts/**
