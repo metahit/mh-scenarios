@@ -27,7 +27,8 @@ for(j in 1:length(lad14$lad14cd)){
   # Merge in scaling weights, and multiply them by the basic trip weight
   sp <- left_join(sp, cityregion, by = c("home_lad14cd"="lad14cd"))
   sp <- left_join(sp, rtswt, by = c("cityregion"="home_cityregion"))
-  sp$weight_walkcycle <- sp$weight_tripXhh * sp$rtswt_cycle
+  sp$weight_cycle <- sp$weight_tripXhh * sp$rtswt_cycle
+  sp$weight_walk <- sp$weight_tripXhh
   sp$weight_cartaxi <- sp$weight_tripXhh * sp$rtswt_cartaxi
   sp$weight_pt <- sp$weight_tripXhh * sp$rtswt_bus
   sp$weight_mc <- sp$weight_tripXhh * sp$rtswt_mc
@@ -238,8 +239,8 @@ for(j in 1:length(lad14$lad14cd)){
   }
     
   # Baseline distance 
-  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walkdist_km', 'base_walk_wkkm_d1', 'weight_walkcycle')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycledist_km', 'base_cycle_wkkm', 'weight_walkcycle', cycle = T, numdistcat = 3)
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walkdist_km', 'base_walk_wkkm_d1', 'weight_walk')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycledist_km', 'base_cycle_wkkm', 'weight_cycle', cycle = T, numdistcat = 3)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cardrivedist_km', 'base_cardrive_wkkm', 'weight_cartaxi', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_carpassdist_km', 'base_carpass_wkkm', 'weight_cartaxi', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbikedrivedist_km', 'base_mbikedrive_wkkm', 'weight_mc', numdistcat = 4)
@@ -249,8 +250,8 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_vandrivedist_km', 'base_vandrive_wkkm', 'weight_lgv', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_vanpassdist_km', 'base_vanpass_wkkm', 'weight_lgv', numdistcat = 4)
   
-  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walktime_hr', 'base_walk_wkhr', 'weight_walkcycle')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycletime_hr', 'base_cycle_wkhr', 'weight_walkcycle')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_walktime_hr', 'base_walk_wkhr', 'weight_walk')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cycletime_hr', 'base_cycle_wkhr', 'weight_cycle')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_cartime_hr', 'base_car_wkhr', 'weight_cartaxi')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_mbiketime_hr', 'base_mbike_wkhr', 'weight_mc')
   sp_ind <- agg_to_individ(sp, sp_ind, 'trip_bustime_hr', 'base_bus_wkhr', 'weight_pt')
@@ -261,8 +262,8 @@ for(j in 1:length(lad14$lad14cd)){
   
   # Scenario distance 
   if(lafull==1) {
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walkdist_km', 'scen_walk_wkkm_d1', 'weight_walkcycle')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycledist_km', 'scen_cycle_wkkm', 'weight_walkcycle', cycle = T,  numdistcat = 3)
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walkdist_km', 'scen_walk_wkkm_d1', 'weight_walk')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycledist_km', 'scen_cycle_wkkm', 'weight_cycle', cycle = T,  numdistcat = 3)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cardrivedist_km', 'scen_cardrive_wkkm', 'weight_cartaxi', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_carpassdist_km', 'scen_carpass_wkkm', 'weight_cartaxi', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedrivedist_km', 'scen_mbikedrive_wkkm', 'weight_mc', numdistcat = 4)
@@ -272,8 +273,8 @@ for(j in 1:length(lad14$lad14cd)){
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vandrivedist_km', 'scen_vandrive_wkkm', 'weight_lgv', numdistcat = 4)
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vanpassdist_km', 'scen_vanpass_wkkm', 'weight_lgv', numdistcat = 4)
   
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr', 'weight_walkcycle')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr', 'weight_walkcycle')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr', 'weight_walk')
+  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr', 'weight_cycle')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cartime_hr', 'scen_car_wkhr', 'weight_cartaxi')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbiketime_hr', 'scen_mbike_wkhr', 'weight_mc')
   sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_bustime_hr', 'scen_bus_wkhr', 'weight_pt')
