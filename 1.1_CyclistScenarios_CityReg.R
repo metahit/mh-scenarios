@@ -9,6 +9,7 @@ memory.limit(size=1000000)
 # Load data
 # Define LA list
 lad14 <- read.csv("../mh-route-commutes/01_DataInput/lad14cd.csv")
+#lad14 <- lad14[lad14$lahome==1,] ## if just want to do the city region ones
 rtswt <- read.csv("1_InputData/2_CityRegion_scaling/RTS_NTS_weights.csv")
 cityregion <- lad14[,c("lad14cd", "cityregion")]
 
@@ -107,7 +108,7 @@ for(j in 1:length(lad14$lad14cd)){
   # Make individual dataset
   sp$demogindex <- (sp$female*100)+(sp$agecat_det)
   if(lafull==1) {
-    sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_lsoa", "home_laname", "home_gor", "urban", "urbanmatch", "female", "agecat_det", "demogindex", "zerotrips", "sport_wkmmets")])
+    sp_ind <- unique(sp[,names(sp) %in% c("census_id", "home_postcode", "home_lsoa", "home_laname", "home_gor", "urban", "urbanmatch", "female", "agecat_det", "demogindex", "zerotrips", "sport_wkmmets")])
   }
   if(lafull==0) {
     sp$census_id <- (sp$urbanmatch*1000)+(sp$demogindex)
