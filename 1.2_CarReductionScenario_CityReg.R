@@ -7,7 +7,7 @@ memory.limit(size=1000000)
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
 # Scenario number
-scennun <- 1
+scennun <- 2
 
 # Load data
 # Define LA list
@@ -41,53 +41,14 @@ for(j in 1:length(lad14$lad14cd)){
   ##### SCENARIO #####
   
   if(lafull==1) {
-  # Scenario target % cycle
-  targetpcycle <- 0.15
+  # Scenario 20% car reduction
+  pcarswitch <- 0.2
   
-  ## STEP 1: IDENTIFY NEW CYCLISTS
-  
-  # Baseline probability near market [coefficients from a logit model of all adults in England]
-  sp$logpcyclist_scen <- (-0.944 * sp$female) + (-0.061 * (sp$agecat==2)) + (-0.032 * (sp$agecat==3)) + (-0.340 * (sp$agecat==4)) + 
-    (-0.879 * (sp$agecat==5)) + (-1.175 * (sp$agecat==6)) + (-0.560 * sp$nonwhite) + (0.267 * sp$nocar) + (0.228 * (sp$ecactivity==1)) +
-    (0.036 * sp$urban) + (0.008 * (sp$home_gor==2)) + (0.195 * (sp$home_gor==3)) + (0.170 * (sp$home_gor==4)) + (0.080 * (sp$home_gor==5)) +
-    (0.205 * (sp$home_gor==6)) + (0.157 *(sp$home_gor==7)) + (0.267 * (sp$home_gor==8)) + (0.361 * (sp$home_gor==9)) + 
-    (-0.020 * sp$slope_ew) + -2.019
-  
-  sp$pcyclist_scen <- exp(sp$logpcyclist_scen) / (1 + (exp(sp$logpcyclist_scen)))
-  
-  # How many cyclists to switch? (none if mode share already higher)
-  nextracyclist <- round((targetpcycle * length(unique(sp$census_id))) - length(unique(sp$census_id[sp$cyclist==1])))
-  if(nextracyclist<0) {
-    nextracyclist <- 0
-  }
-  
-  # Randomly turn N=sp$nextracyclist non-cyclists to new cyclists, with weight equal to sp$pcyclist_scen
-  sp$scen_newcyclist <- 0
+  ## STEP 1: IDENTIFY RANDOM 20% CAR DRIVER/PASSENGER TRIPS
+  sp$scen_droptrip <- 0
   set.seed(2018)
-  unique_non_cyclists_df <- sp %>% distinct(census_id, .keep_all = TRUE) %>% filter(cyclist != 1)
-  sampled_non_cyclists_df <- sample_n(unique_non_cyclists_df, size = nextracyclist, weight = unique_non_cyclists_df$pcyclist_scen)
-  sp$scen_newcyclist[sp$census_id %in% sampled_non_cyclists_df$census_id] <- 1 
-  
-  
-  ## STEP 2: SWITCH TRIPS AMONG NEW CYCLISTS & UPDATE SCENARIO VALUES
-  
-  # Merge in probability of cycling a trip by distance age and sex, and cycle speed by age and sex 
-  sp$trip_distcat_km=round(sp$trip_distraw_km)
-  
-  sp <-  sp %>% dplyr::mutate(trip_distcat_km = case_when(trip_distcat_km %in% c(0:1) ~ 0,
-                                                          trip_distcat_km %in% c(2:4) ~ 2,
-                                                          trip_distcat_km %in% c(5:7) ~ 5,
-                                                          trip_distcat_km %in% c(8:12) ~ 8,
-                                                          trip_distcat_km %in% c(13:19) ~ 13,
-                                                          trip_distcat_km %in% c(20:29) ~ 20,
-                                                          trip_distcat_km >= 30 ~ 30))
-  sp <-  sp %>% dplyr::mutate(older = case_when(agecat %in% c(1:3) ~ 0,
-                                                agecat %in% c(4:6) ~ 1))
-  sp <- left_join(sp, distspeed, by=c("trip_distcat_km", "female", "older"))
-  
-  # Randomly switch some trips to cycling in new cyclists
-  sp$cyclerandom <- runif(nrow(sp), min = 0, max = 1)
-  sp$scen_newmaincycletrip <- (sp$cyclist==0 & sp$scen_newcyclist==1 & sp$trip_pcycle>sp$cyclerandom & !is.na(sp$trip_pcycle))
+  sp$random <- runif(nrow(sp), min = 0, max = 1)
+  sp$scen_nodrivetrip <- (sp$trip_mainmode_det>=5 & sp$trip_mainmode_det<=8 & sp$random<pcarswitch)
   
   # Initially set scenario values equal to baseline
   sp$scen_trip_mainmode_det <- sp$trip_mainmode_det
@@ -97,13 +58,9 @@ for(j in 1:length(lad14$lad14cd)){
   sp$scen_trip_cycledist_km <- sp$trip_cycledist_km
   sp$scen_trip_walkdist_km <- sp$trip_walkdist_km
   
-  # Update scenario values for the new cycle trips (distance unchanged)
-  sp$scen_trip_mainmode_det[sp$scen_newmaincycletrip==1] <- 3 
-  sp$scen_trip_durationraw_hr[sp$scen_newmaincycletrip==1] <- round(sp$trip_distraw_km[sp$scen_newmaincycletrip==1] / sp$trip_cyclespeed_kmhr[sp$scen_newmaincycletrip==1])
-  sp$scen_trip_cycletime_hr[sp$scen_newmaincycletrip==1] <- sp$scen_trip_durationraw_hr[sp$scen_newmaincycletrip==1] 
-  sp$scen_trip_walktime_hr[sp$scen_newmaincycletrip==1] <- 0 
-  sp$scen_trip_cycledist_km[sp$scen_newmaincycletrip==1] <- sp$trip_distraw_km[sp$scen_newmaincycletrip==1] 
-  sp$scen_trip_walkdist_km[sp$scen_newmaincycletrip==1] <- 0 
+  # Update scenario values for the dropped driven trips (assume just stay home)
+  sp$scen_weight_cartaxi <- sp$weight_cartaxi
+  sp$scen_weight_cartaxi[sp$scen_nodrivetrip==1] <- 0
   }
   
   
@@ -152,37 +109,37 @@ for(j in 1:length(lad14$lad14cd)){
   sp$trip_vantime_hr[!(sp$trip_mainmode_det %in% c(13:16))]  <- 0
   
   if(lafull==1) {
-  sp$scen_trip_cardrivedist_km  <- sp$trip_distraw_km
-  sp$scen_trip_cardrivedist_km[!(sp$scen_trip_mainmode_det %in% c(5:6))]  <- 0
-  sp$scen_trip_carpassdist_km  <- sp$trip_distraw_km
-  sp$scen_trip_carpassdist_km[!(sp$scen_trip_mainmode_det %in% c(7:8))]  <- 0
-  sp$scen_trip_mbikedrivedist_km  <- sp$trip_distraw_km
-  sp$scen_trip_mbikedrivedist_km[!(sp$scen_trip_mainmode_det %in% c(9:10))]  <- 0
-  sp$scen_trip_mbikepassdist_km  <- sp$trip_distraw_km
-  sp$scen_trip_mbikepassdist_km[!(sp$scen_trip_mainmode_det %in% c(11:12))]  <- 0
-  sp$scen_trip_busdist_km  <- sp$trip_distraw_km
-  sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
-  sp$scen_trip_taxidist_km  <- sp$trip_distraw_km
-  sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
-  sp$scen_trip_vandrivedist_km  <- sp$trip_distraw_km
-  sp$scen_trip_vandrivedist_km[!(sp$scen_trip_mainmode_det %in% c(13:14))]  <- 0
-  sp$scen_trip_vanpassdist_km  <- sp$trip_distraw_km
-  sp$scen_trip_vanpassdist_km[!(sp$scen_trip_mainmode_det %in% c(15:16))]  <- 0
-  
-  sp$scen_trip_cartime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode_det %in% c(5:8))]  <- 0
-  sp$scen_trip_mbiketime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_mbiketime_hr[!(sp$scen_trip_mainmode_det %in% c(9:12))]  <- 0
-  sp$scen_trip_bustime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_bustime_hr[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
-  sp$scen_trip_tubetime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_tubetime_hr[!(sp$scen_trip_mainmode_det %in% c(22))]  <- 0
-  sp$scen_trip_traintime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode_det %in% c(23:24))]  <- 0
-  sp$scen_trip_taxitime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
-  sp$scen_trip_vantime_hr  <- sp$scen_trip_durationraw_hr
-  sp$scen_trip_vantime_hr[!(sp$scen_trip_mainmode_det %in% c(13:16))]  <- 0
+    sp$scen_trip_cardrivedist_km  <- sp$trip_distraw_km
+    sp$scen_trip_cardrivedist_km[!(sp$scen_trip_mainmode_det %in% c(5:6))]  <- 0
+    sp$scen_trip_carpassdist_km  <- sp$trip_distraw_km
+    sp$scen_trip_carpassdist_km[!(sp$scen_trip_mainmode_det %in% c(7:8))]  <- 0
+    sp$scen_trip_mbikedrivedist_km  <- sp$trip_distraw_km
+    sp$scen_trip_mbikedrivedist_km[!(sp$scen_trip_mainmode_det %in% c(9:10))]  <- 0
+    sp$scen_trip_mbikepassdist_km  <- sp$trip_distraw_km
+    sp$scen_trip_mbikepassdist_km[!(sp$scen_trip_mainmode_det %in% c(11:12))]  <- 0
+    sp$scen_trip_busdist_km  <- sp$trip_distraw_km
+    sp$scen_trip_busdist_km[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
+    sp$scen_trip_taxidist_km  <- sp$trip_distraw_km
+    sp$scen_trip_taxidist_km[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
+    sp$scen_trip_vandrivedist_km  <- sp$trip_distraw_km
+    sp$scen_trip_vandrivedist_km[!(sp$scen_trip_mainmode_det %in% c(13:14))]  <- 0
+    sp$scen_trip_vanpassdist_km  <- sp$trip_distraw_km
+    sp$scen_trip_vanpassdist_km[!(sp$scen_trip_mainmode_det %in% c(15:16))]  <- 0
+    
+    sp$scen_trip_cartime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_cartime_hr[!(sp$scen_trip_mainmode_det %in% c(5:8))]  <- 0
+    sp$scen_trip_mbiketime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_mbiketime_hr[!(sp$scen_trip_mainmode_det %in% c(9:12))]  <- 0
+    sp$scen_trip_bustime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_bustime_hr[!(sp$scen_trip_mainmode_det %in% c(18:20))]  <- 0
+    sp$scen_trip_tubetime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_tubetime_hr[!(sp$scen_trip_mainmode_det %in% c(22))]  <- 0
+    sp$scen_trip_traintime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_traintime_hr[!(sp$scen_trip_mainmode_det %in% c(23:24))]  <- 0
+    sp$scen_trip_taxitime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_taxitime_hr[!(sp$scen_trip_mainmode_det %in% c(26:27))]  <- 0
+    sp$scen_trip_vantime_hr  <- sp$scen_trip_durationraw_hr
+    sp$scen_trip_vantime_hr[!(sp$scen_trip_mainmode_det %in% c(13:16))]  <- 0
   }
   
   # Define distance categories for applying matrices
@@ -192,12 +149,6 @@ for(j in 1:length(lad14$lad14cd)){
   sp$distcat[sp$distcat==4 & sp$trip_mainmode_det==3] <- 3 # bike at most level 3
   sp$distcat[sp$distcat==4 & sp$trip_mainmode_det>=18 & sp$trip_mainmode_det<=20] <- 3 # bus at most level 3
   sp$distcat[is.na(sp$distcat)] <- 0 # give 0 value if missing trip distance, i.e. no travel
-  sp$distcat_cycle <- sp$distcat
-  if(lafull==1) {
-    sp$distcat_cycle[sp$trip_mainmode_det!=3 & sp$scen_newmaincycletrip==0] <- 1 # cycle at most level 1 if in a baseline multimodal trip
-  } else {
-    sp$distcat_cycle[sp$trip_mainmode_det!=3] <- 1 # cycle at most level 1 if in a baseline multimodal trip
-  }
 
   # Function to aggregate to individual level
   agg_to_individ <- function(trip_level_dataset, individual_dataset, variable, aggregatedata, weight, cycle = F, numdistcat = 1){
@@ -211,16 +162,12 @@ for(j in 1:length(lad14$lad14cd)){
      trip_level_dataset$variable_d2 <- trip_level_dataset[variable] * trip_level_dataset[weight]
      trip_level_dataset$variable_d3 <- trip_level_dataset[variable] * trip_level_dataset[weight]
      trip_level_dataset$variable_d4 <- trip_level_dataset[variable] * trip_level_dataset[weight]
-     if (cycle==F) {
+
         trip_level_dataset$variable_d1[trip_level_dataset$distcat!=1 | is.na(trip_level_dataset$variable_d1),] <- 0
         trip_level_dataset$variable_d2[trip_level_dataset$distcat!=2 | is.na(trip_level_dataset$variable_d2),] <- 0    
         trip_level_dataset$variable_d3[trip_level_dataset$distcat!=3 | is.na(trip_level_dataset$variable_d3),] <- 0    
         trip_level_dataset$variable_d4[trip_level_dataset$distcat!=4 | is.na(trip_level_dataset$variable_d4),] <- 0
-      } else {
-        trip_level_dataset$variable_d1[trip_level_dataset$distcat_cycle!=1 | is.na(trip_level_dataset$variable_d1),] <- 0
-        trip_level_dataset$variable_d2[trip_level_dataset$distcat_cycle!=2 | is.na(trip_level_dataset$variable_d2),] <- 0    
-        trip_level_dataset$variable_d3[trip_level_dataset$distcat_cycle!=3 | is.na(trip_level_dataset$variable_d3),] <- 0    
-      }
+
         df_d1 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d1))
         names(df_d1)[2] <- paste0(aggregatedata,"_d1")
         df_d2 <- trip_level_dataset %>% group_by(census_id) %>% summarise(total = sum(variable_d2))
@@ -266,26 +213,26 @@ for(j in 1:length(lad14$lad14cd)){
   
   # Scenario distance 
   if(lafull==1) {
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walkdist_km', 'scen_walk_wkkm_d1', 'weight_walk')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycledist_km', 'scen_cycle_wkkm', 'weight_cycle', cycle = T,  numdistcat = 3)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cardrivedist_km', 'scen_cardrive_wkkm', 'weight_cartaxi', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_carpassdist_km', 'scen_carpass_wkkm', 'weight_cartaxi', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedrivedist_km', 'scen_mbikedrive_wkkm', 'weight_mc', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikepassdist_km', 'scen_mbikepass_wkkm', 'weight_mc', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_busdist_km', 'scen_bus_wkkm', 'weight_pt', numdistcat = 3)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxidist_km', 'scen_taxi_wkkm', 'weight_cartaxi', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vandrivedist_km', 'scen_vandrive_wkkm', 'weight_lgv', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vanpassdist_km', 'scen_vanpass_wkkm', 'weight_lgv', numdistcat = 4)
-  
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr', 'weight_walk')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr', 'weight_cycle', cycle = T, numdistcat = 3)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cartime_hr', 'scen_car_wkhr', 'weight_cartaxi', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbiketime_hr', 'scen_mbike_wkhr', 'weight_mc', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_bustime_hr', 'scen_bus_wkhr', 'weight_pt', numdistcat = 3)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_tubetime_hr', 'scen_tube_wkhr', 'weight_pt')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_traintime_hr', 'scen_train_wkhr', 'weight_pt')
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxitime_hr', 'scen_taxi_wkhr', 'weight_cartaxi', numdistcat = 4)
-  sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vantime_hr', 'scen_van_wkhr', 'weight_lgv', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walkdist_km', 'scen_walk_wkkm_d1', 'weight_walk')
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycledist_km', 'scen_cycle_wkkm', 'weight_cycle', cycle = T,  numdistcat = 3)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cardrivedist_km', 'scen_cardrive_wkkm', 'scen_weight_cartaxi', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_carpassdist_km', 'scen_carpass_wkkm', 'scen_weight_cartaxi', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikedrivedist_km', 'scen_mbikedrive_wkkm', 'weight_mc', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbikepassdist_km', 'scen_mbikepass_wkkm', 'weight_mc', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_busdist_km', 'scen_bus_wkkm', 'weight_pt', numdistcat = 3)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxidist_km', 'scen_taxi_wkkm', 'weight_cartaxi', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vandrivedist_km', 'scen_vandrive_wkkm', 'weight_lgv', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vanpassdist_km', 'scen_vanpass_wkkm', 'weight_lgv', numdistcat = 4)
+    
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_walktime_hr', 'scen_walk_wkhr', 'weight_walk')
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cycletime_hr', 'scen_cycle_wkhr', 'weight_cycle', cycle = T, numdistcat = 3)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_cartime_hr', 'scen_car_wkhr', 'scen_weight_cartaxi', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_mbiketime_hr', 'scen_mbike_wkhr', 'weight_mc', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_bustime_hr', 'scen_bus_wkhr', 'weight_pt', numdistcat = 3)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_tubetime_hr', 'scen_tube_wkhr', 'weight_pt')
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_traintime_hr', 'scen_train_wkhr', 'weight_pt')
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_taxitime_hr', 'scen_taxi_wkhr', 'weight_cartaxi', numdistcat = 4)
+    sp_ind <- agg_to_individ(sp, sp_ind, 'scen_trip_vantime_hr', 'scen_van_wkhr', 'weight_lgv', numdistcat = 4)
   }
   
   # Marginal METs per week, individual [not created her as met_cycle/walk random variables]
