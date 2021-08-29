@@ -294,9 +294,9 @@ for(j in 1:length(lad14$lad14cd)){
   
   # Save dataset
   if(lafull==1) {
-    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", paste0("s",scennun), paste0("SPind_", lahome, ".Rds")),version=2)
+    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios/cyc_scen", paste0("SPind_", lahome, ".Rds")),version=2)
   } else {
-    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini", paste0("s",scennun), paste0("SPind_", lahome, ".Rds")),version=2)
+    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini/cyc_scen", paste0("SPind_", lahome, ".Rds")),version=2)
   }
     
   print(paste0("Scenario run for home LA ",lahome, " (", j , ") at ",Sys.time()))
