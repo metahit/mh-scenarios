@@ -52,6 +52,7 @@ for(j in 1:length(lad14$lad14cd)){
   sp$scen_trip_walktime_hr <- sp$trip_walktime_hr * walkincrease
   sp$scen_trip_cycledist_km <- sp$trip_cycledist_km
   sp$scen_trip_walkdist_km <- sp$trip_walkdist_km * walkincrease
+  }
   
   ## STEP 3: AGGREGATE TO INDIVIDUAL LEVEL
   # Make individual dataset
