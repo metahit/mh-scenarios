@@ -7,7 +7,7 @@ memory.limit(size=1000000)
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
 # Scenario name
-scenname <- 'car_scen' 
+scenname <- 'car_20p_red_scen' 
 
 # Load data
 # Define LA list
@@ -245,6 +245,6 @@ for(j in 1:length(lad14$lad14cd)){
   } else {
     saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini", scenname, paste0("SPind_", lahome, ".Rds")),version=2)
   }
-    
+  
   print(paste0("Scenario run for home LA ",lahome, " (", j , ") at ",Sys.time()))
 }

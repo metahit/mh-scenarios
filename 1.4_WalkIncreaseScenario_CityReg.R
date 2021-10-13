@@ -6,8 +6,8 @@ memory.limit(size=1000000)
 
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
-# Scenario number
-scennun <- 4
+# Scenario name
+scenname <- 'wlk_10p_inc_scen'
 
 # Load data
 # Define LA list
@@ -231,10 +231,10 @@ for(j in 1:length(lad14$lad14cd)){
   
   # Save dataset
   if(lafull==1) {
-    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", paste0("s",scennun), paste0("SPind_", lahome, ".Rds")),version=2)
+    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios", scenname, paste0("SPind_", lahome, ".Rds")),version=2)
   } else {
-    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini", paste0("s",scennun), paste0("SPind_", lahome, ".Rds")),version=2)
+    saveRDS(sp_ind, file.path("../mh-execute/inputs/scenarios-mini", scenname, paste0("SPind_", lahome, ".Rds")),version=2)
   }
-    
+  
   print(paste0("Scenario run for home LA ",lahome, " (", j , ") at ",Sys.time()))
 }
