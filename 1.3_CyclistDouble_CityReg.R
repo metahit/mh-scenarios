@@ -7,7 +7,7 @@ memory.limit(size=1000000)
 ## STEP 0: INPUT DATA AND PARAMETERS 
 
 # Scenario name
-scen_name <- 'cyc_dbl_scen'
+scen_name <- 'cyc_100p_inc_scen'
 
 # Load data
 # Define LA list
